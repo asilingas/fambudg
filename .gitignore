@@ -1,0 +1,28 @@
+# Binaries
+/backend/bin/
+*.exe
+
+# Environment
+.env
+
+# Database file (if ever using SQLite)
+*.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+
+# Go
+coverage.out
+
+# Node / React (for frontend later)
+node_modules/
+/frontend/build/
+/frontend/dist/
+
+# Vendor (optional)
+# /backend/vendor/
