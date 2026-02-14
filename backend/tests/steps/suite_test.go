@@ -81,8 +81,23 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 }
 
 func (tc *TestContext) setupTestDatabase() error {
-	// Load test configuration
+	// Set test environment variables
 	os.Setenv("DB_NAME", "fambudg_test")
+	os.Setenv("JWT_SECRET", "test-secret-key-for-bdd-tests")
+
+	// Set other defaults if not already set
+	if os.Getenv("DB_HOST") == "" {
+		os.Setenv("DB_HOST", "localhost")
+	}
+	if os.Getenv("DB_PORT") == "" {
+		os.Setenv("DB_PORT", "5432")
+	}
+	if os.Getenv("DB_USER") == "" {
+		os.Setenv("DB_USER", "budget")
+	}
+	if os.Getenv("DB_PASSWORD") == "" {
+		os.Setenv("DB_PASSWORD", "localdev")
+	}
 
 	cfg, err := config.Load()
 	if err != nil {
