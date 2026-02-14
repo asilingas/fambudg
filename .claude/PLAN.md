@@ -339,9 +339,9 @@ fambudg/
 - [x] Category CRUD endpoints
 - [x] Account CRUD endpoints
 - [x] Basic middleware (auth, logging, CORS)
-- [ ] Unit tests for services
-- [ ] godog BDD setup + first feature files (auth, transactions)
-- [ ] Test database setup and teardown
+- [x] Unit tests for services
+- [x] godog BDD setup + first feature files (auth, transactions)
+- [x] Test database setup and teardown
 
 ### Phase 2 — Budgeting & Reports
 - [ ] Budget CRUD (set monthly limits per category)
