@@ -57,6 +57,7 @@ beforeEach(() => {
     if (url.startsWith("/reports/monthly")) return Promise.resolve({ data: monthlySummary })
     if (url.startsWith("/reports/by-category")) return Promise.resolve({ data: categorySpending })
     if (url.startsWith("/reports/trends")) return Promise.resolve({ data: trends })
+    if (url.startsWith("/reports/by-member")) return Promise.resolve({ data: [] })
     if (url === "/auth/me") {
       return Promise.resolve({
         data: { id: "u1", email: "admin@test.com", name: "Admin", role: "admin" },
@@ -100,6 +101,7 @@ describe("ReportsPage", () => {
       if (url.startsWith("/reports/monthly")) return Promise.resolve({ data: null })
       if (url.startsWith("/reports/by-category")) return Promise.resolve({ data: [] })
       if (url.startsWith("/reports/trends")) return Promise.resolve({ data: [] })
+      if (url.startsWith("/reports/by-member")) return Promise.resolve({ data: [] })
       if (url === "/auth/me") {
         return Promise.resolve({
           data: { id: "u1", email: "admin@test.com", name: "Admin", role: "admin" },

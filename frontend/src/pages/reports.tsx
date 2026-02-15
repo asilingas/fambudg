@@ -26,9 +26,10 @@ import {
   Line,
   Legend,
 } from "recharts"
+import { useAuth } from "@/context/auth-context"
 import api from "@/lib/api"
 import { formatCents } from "@/lib/format"
-import type { MonthSummary, CategorySpending, TrendPoint } from "@/lib/types"
+import type { MonthSummary, CategorySpending, TrendPoint, MemberSpending } from "@/lib/types"
 
 const now = new Date()
 
@@ -41,27 +42,36 @@ function monthLabel(m: number, y: number) {
 }
 
 export default function ReportsPage() {
+  const { user } = useAuth()
+  const isAdmin = user?.role === "admin"
+
   const [month, setMonth] = useState(now.getMonth() + 1)
   const [year, setYear] = useState(now.getFullYear())
 
   const [monthlySummary, setMonthlySummary] = useState<MonthSummary | null>(null)
   const [categorySpending, setCategorySpending] = useState<CategorySpending[]>([])
   const [trends, setTrends] = useState<TrendPoint[]>([])
+  const [memberSpending, setMemberSpending] = useState<MemberSpending[]>([])
   const [loading, setLoading] = useState(true)
 
   const fetchData = useCallback(() => {
     setLoading(true)
-    Promise.all([
+    const requests = [
       api.get(`/reports/monthly?month=${month}&year=${year}`),
       api.get(`/reports/by-category?month=${month}&year=${year}`),
       api.get("/reports/trends?months=6"),
-    ]).then(([monthlyRes, catRes, trendsRes]) => {
+    ]
+    if (isAdmin) {
+      requests.push(api.get(`/reports/by-member?month=${month}&year=${year}`))
+    }
+    Promise.all(requests).then(([monthlyRes, catRes, trendsRes, memberRes]) => {
       setMonthlySummary(monthlyRes.data)
       setCategorySpending(catRes.data ?? [])
       setTrends(trendsRes.data ?? [])
+      if (memberRes) setMemberSpending(memberRes.data ?? [])
       setLoading(false)
     })
-  }, [month, year])
+  }, [month, year, isAdmin])
 
   useEffect(() => {
     fetchData()
@@ -77,6 +87,13 @@ export default function ReportsPage() {
     income: centsToEuros(t.totalIncome),
     expenses: centsToEuros(t.totalExpense),
     net: t.net / 100,
+  }))
+
+  const memberData = memberSpending.map((ms) => ({
+    name: ms.userName,
+    income: centsToEuros(ms.totalIncome),
+    expenses: centsToEuros(ms.totalExpense),
+    net: ms.net / 100,
   }))
 
   if (loading) {
@@ -114,6 +131,7 @@ export default function ReportsPage() {
           <TabsTrigger value="monthly">Monthly</TabsTrigger>
           <TabsTrigger value="categories">By Category</TabsTrigger>
           <TabsTrigger value="trends">Trends</TabsTrigger>
+          {isAdmin && <TabsTrigger value="family">Family</TabsTrigger>}
         </TabsList>
 
         {/* Monthly Summary Tab */}
@@ -220,6 +238,36 @@ export default function ReportsPage() {
             <p className="text-sm text-muted-foreground">Not enough data for trends.</p>
           )}
         </TabsContent>
+
+        {/* Family Spending Comparison Tab (Admin Only) */}
+        {isAdmin && (
+          <TabsContent value="family" className="space-y-4 pt-4">
+            {memberData.length > 0 ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-medium">Family Spending Comparison</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={memberData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis tickFormatter={(v) => `€${v}`} />
+                        <Tooltip formatter={(value: number) => `€${value.toFixed(2)}`} />
+                        <Legend />
+                        <Bar dataKey="income" fill="hsl(var(--income))" name="Income" />
+                        <Bar dataKey="expenses" fill="hsl(var(--expense))" name="Expenses" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <p className="text-sm text-muted-foreground">No family data for this period.</p>
+            )}
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   )

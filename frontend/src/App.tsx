@@ -14,6 +14,9 @@ import SearchPage from "@/pages/search"
 import GoalsPage from "@/pages/goals"
 import BillsPage from "@/pages/bills"
 import TransfersPage from "@/pages/transfers"
+import UsersPage from "@/pages/users"
+import AllowancesPage from "@/pages/allowances"
+import ImportExportPage from "@/pages/import-export"
 
 export default function App() {
   return (
@@ -38,6 +41,13 @@ export default function App() {
               </Route>
               <Route path="/transfers" element={<ProtectedRoute allowedRoles={["admin", "member"]} />}>
                 <Route index element={<TransfersPage />} />
+              </Route>
+              <Route path="/users" element={<ProtectedRoute allowedRoles={["admin"]} />}>
+                <Route index element={<UsersPage />} />
+              </Route>
+              <Route path="/allowances" element={<AllowancesPage />} />
+              <Route path="/import-export" element={<ProtectedRoute allowedRoles={["admin", "member"]} />}>
+                <Route index element={<ImportExportPage />} />
               </Route>
               <Route path="/reports" element={<ReportsPage />} />
               <Route path="/search" element={<SearchPage />} />

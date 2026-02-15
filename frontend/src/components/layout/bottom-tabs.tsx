@@ -9,6 +9,8 @@ import {
   Target,
   Receipt,
   ArrowRightLeft,
+  Coins,
+  FileSpreadsheet,
   Search,
   Users,
   type LucideIcon,
@@ -27,6 +29,8 @@ const iconMap: Record<string, LucideIcon> = {
   Target,
   Receipt,
   ArrowRightLeft,
+  Coins,
+  FileSpreadsheet,
   Search,
   Users,
 }

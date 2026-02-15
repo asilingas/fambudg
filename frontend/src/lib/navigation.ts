@@ -17,6 +17,8 @@ export const navItems: NavItem[] = [
   { label: "Goals", path: "/goals", icon: "Target", roles: ["admin", "member"] },
   { label: "Bills", path: "/bills", icon: "Receipt", roles: ["admin", "member"] },
   { label: "Transfers", path: "/transfers", icon: "ArrowRightLeft", roles: ["admin", "member"] },
+  { label: "Allowances", path: "/allowances", icon: "Coins", roles: ["admin", "child"] },
+  { label: "Import/Export", path: "/import-export", icon: "FileSpreadsheet", roles: ["admin", "member"] },
   { label: "Search", path: "/search", icon: "Search", roles: ["admin", "member", "child"] },
   { label: "Users", path: "/users", icon: "Users", roles: ["admin"] },
 ]
