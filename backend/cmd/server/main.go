@@ -33,18 +33,21 @@ func main() {
 	accountRepo := repository.NewAccountRepository(pool)
 	categoryRepo := repository.NewCategoryRepository(pool)
 	transactionRepo := repository.NewTransactionRepository(pool)
+	budgetRepo := repository.NewBudgetRepository(pool)
 
 	// Initialize services
 	authService := service.NewAuthService(userRepo, cfg.JWT.Secret)
 	accountService := service.NewAccountService(accountRepo)
 	categoryService := service.NewCategoryService(categoryRepo)
 	transactionService := service.NewTransactionService(transactionRepo, accountRepo)
+	budgetService := service.NewBudgetService(budgetRepo)
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(authService)
 	accountHandler := handler.NewAccountHandler(accountService)
 	categoryHandler := handler.NewCategoryHandler(categoryService)
 	transactionHandler := handler.NewTransactionHandler(transactionService)
+	budgetHandler := handler.NewBudgetHandler(budgetService)
 
 	// Create router
 	r := chi.NewRouter()
@@ -83,6 +86,13 @@ func main() {
 		r.Get("/api/transactions/{id}", transactionHandler.Get)
 		r.Put("/api/transactions/{id}", transactionHandler.Update)
 		r.Delete("/api/transactions/{id}", transactionHandler.Delete)
+
+		// Budgets
+		r.Get("/api/budgets", budgetHandler.List)
+		r.Post("/api/budgets", budgetHandler.Create)
+		r.Put("/api/budgets/{id}", budgetHandler.Update)
+		r.Delete("/api/budgets/{id}", budgetHandler.Delete)
+		r.Get("/api/budgets/summary", budgetHandler.Summary)
 	})
 
 	// Health check
