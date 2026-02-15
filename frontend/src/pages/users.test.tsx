@@ -19,7 +19,7 @@ vi.mock("@/lib/api", () => ({
 
 import api from "@/lib/api"
 
-const mockedApi = vi.mocked(api)
+const mockedApi = vi.mocked(api, true)
 
 const users = [
   { id: "u1", email: "admin@test.com", name: "Admin", role: "admin", createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" },

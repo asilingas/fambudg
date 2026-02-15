@@ -30,7 +30,7 @@ vi.mock("@/lib/api", () => ({
 
 import api from "@/lib/api"
 
-const mockedApi = vi.mocked(api)
+const mockedApi = vi.mocked(api, true)
 
 const monthlySummary = {
   month: 2,
