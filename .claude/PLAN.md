@@ -380,26 +380,28 @@ fambudg/
 **Testing:** Vitest + React Testing Library (unit/component), Playwright (E2E)
 **Layout:** Persistent left sidebar on desktop/tablet, bottom tab bar on mobile (iPhone 14+). Responsive breakpoints: mobile (<768px), tablet (768–1024px), desktop (>1024px).
 
-#### 5A: Project Setup & Auth
-- [ ] Initialize React app (Vite + TypeScript) in `frontend/`
-- [ ] Install dependencies: React Router, Axios, Tailwind CSS, shadcn/ui, Recharts
-- [ ] Install test dependencies: Vitest, React Testing Library, Playwright
-- [ ] Tailwind config with custom color tokens (income green, expense red, neutral grays)
-- [ ] API client module with base URL config and JWT interceptor (token in localStorage)
-- [ ] Auth context/provider (login state, current user with role, logout)
-- [ ] Login page (email + password form, error handling)
-- [ ] Protected route wrapper (redirect to `/login` if not authenticated)
-- [ ] App shell: sidebar nav (desktop/tablet) + bottom tab bar (mobile) + top bar with user name and logout
-- [ ] Role-aware navigation (hide admin-only links from member/child)
-- [ ] Tests: login flow, auth redirect, role-aware nav rendering
+#### 5A: Project Setup & Auth ✅
+- [x] Initialize React app (Vite + TypeScript) in `frontend/`
+- [x] Install dependencies: React Router, Axios, Tailwind CSS, shadcn/ui, Recharts
+- [x] Install test dependencies: Vitest, React Testing Library, Playwright
+- [x] Tailwind config with custom color tokens (income green, expense red, neutral grays)
+- [x] API client module with base URL config and JWT interceptor (token in localStorage)
+- [x] Auth context/provider (login state, current user with role, logout)
+- [x] Login page (email + password form, error handling)
+- [x] Protected route wrapper (redirect to `/login` if not authenticated)
+- [x] App shell: sidebar nav (desktop/tablet) + bottom tab bar (mobile) + top bar with user name and logout
+- [x] Role-aware navigation (hide admin-only links from member/child)
+- [x] Tests: login flow, auth redirect, role-aware nav rendering
+- [x] Commit with `fixes #24`, push, verify issue closed
 
-#### 5B: Core Screens
-- [ ] **Dashboard** — account balance cards, month summary card (income/expense/net), recent transactions list (last 10)
-- [ ] **Transactions page** — data table with sorting, filters (date range, category, account, type, shared/personal), pagination
-- [ ] **Transaction form** — modal or drawer for create/edit: category and account dropdowns, date picker, amount input (display dollars, send cents), type toggle (income/expense), tags input, shared checkbox
-- [ ] **Accounts page** — cards showing name, type, currency, balance; create/edit/delete dialogs
-- [ ] **Categories page** — list with icons, create dialog (admin+member), edit/delete (admin only)
-- [ ] Tests: dashboard renders data, transaction CRUD flow, account CRUD flow, category list and permissions
+#### 5B: Core Screens ✅
+- [x] **Dashboard** — account balance cards, month summary card (income/expense/net), recent transactions list (last 10)
+- [x] **Transactions page** — data table with sorting, filters (date range, category, account, type, shared/personal), pagination
+- [x] **Transaction form** — modal or drawer for create/edit: category and account dropdowns, date picker, amount input (display dollars, send cents), type toggle (income/expense), tags input, shared checkbox
+- [x] **Accounts page** — cards showing name, type, currency, balance; create/edit/delete dialogs
+- [x] **Categories page** — list with icons, create dialog (admin+member), edit/delete (admin only)
+- [x] Tests: dashboard renders data, transaction CRUD flow, account CRUD flow, category list and permissions
+- [x] Commit with `fixes #25`, push, verify issue closed
 
 #### 5C: Budgeting & Reports
 - [ ] **Budgets page** — list with progress bars (spent vs limit per category), create/edit/delete (admin only)
@@ -408,12 +410,14 @@ fambudg/
 - [ ] **Trends page** — line chart: income, expense, and net over last 6–12 months (Recharts)
 - [ ] **Search page** — search input with filters (description, amount range, date range, category, account, tags), results table
 - [ ] Tests: budget progress display, report data rendering, search with filters, chart rendering
+- [ ] Commit with `fixes #26`, push, verify issue closed
 
 #### 5D: Saving Goals, Bills & Transfers
 - [ ] **Saving goals page** — progress bars toward target amount, contribute button with amount input (admin), auto-complete indicator
 - [ ] **Bill reminders page** — upcoming bills list sorted by due date, overdue highlight, "mark as paid" button (creates transaction), create/edit/delete (admin)
 - [ ] **Transfer form** — select source and destination account, amount input, confirmation
 - [ ] Tests: saving goal contribute flow, bill pay flow, transfer between accounts
+- [ ] Commit with `fixes #27`, push, verify issue closed
 
 #### 5E: Admin & Family Features
 - [ ] **User management page** (admin only) — table of users with role badges, create user dialog (email, name, role), edit role, delete with confirmation
@@ -421,6 +425,7 @@ fambudg/
 - [ ] **Allowances page** — admin: set/edit child allowances with amount and period; child: view own allowance with spent/remaining progress bar
 - [ ] **CSV import/export** — import: file upload with preview of parsed rows before confirming; export: download button
 - [ ] Tests: user management CRUD (admin only), allowance display per role, CSV import/export flow
+- [ ] Commit with `fixes #28`, push, verify issue closed
 
 #### 5F: Polish & UX
 - [ ] Responsive testing on desktop, tablet, iPhone 14 viewport
@@ -431,6 +436,7 @@ fambudg/
 - [ ] Currency formatting with locale (e.g., $19.99 display from 1999 cents)
 - [ ] Dark mode support (Tailwind dark: classes)
 - [ ] E2E tests (Playwright): full login → create transaction → view dashboard → search flow
+- [ ] Commit with `fixes #29`, push, verify issue closed
 
 ### Phase 6 — Cloud Deployment
 - [ ] Dockerfile for the Go backend

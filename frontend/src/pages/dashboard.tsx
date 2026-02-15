@@ -27,7 +27,9 @@ export default function DashboardPage() {
     return <p className="text-muted-foreground">Loading...</p>
   }
 
-  const { accounts, monthSummary, recentTransactions } = data
+  const accounts = data.accounts ?? []
+  const monthSummary = data.monthSummary
+  const recentTransactions = data.recentTransactions ?? []
 
   return (
     <div className="space-y-6">
