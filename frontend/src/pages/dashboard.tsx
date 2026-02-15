@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import api from "@/lib/api"
 import { formatCents } from "@/lib/format"
 import type { DashboardResponse } from "@/lib/types"
+import { DashboardSkeleton } from "@/components/loading-skeleton"
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardResponse | null>(null)
@@ -24,7 +25,7 @@ export default function DashboardPage() {
   }
 
   if (!data) {
-    return <p className="text-muted-foreground">Loading...</p>
+    return <DashboardSkeleton />
   }
 
   const accounts = data.accounts ?? []

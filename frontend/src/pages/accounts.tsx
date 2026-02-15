@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react"
+import { PageSkeleton } from "@/components/loading-skeleton"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -120,7 +121,7 @@ export default function AccountsPage() {
   }
 
   if (loading) {
-    return <p className="text-muted-foreground">Loading...</p>
+    return <PageSkeleton />
   }
 
   return (

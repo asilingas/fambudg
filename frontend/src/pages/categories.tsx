@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react"
+import { PageSkeleton } from "@/components/loading-skeleton"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -129,7 +130,7 @@ export default function CategoriesPage() {
   }
 
   if (loading) {
-    return <p className="text-muted-foreground">Loading...</p>
+    return <PageSkeleton />
   }
 
   return (

@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react"
+import { PageSkeleton } from "@/components/loading-skeleton"
 import { Input } from "@/components/ui/input"
 import {
   Card,
@@ -97,7 +98,7 @@ export default function ReportsPage() {
   }))
 
   if (loading) {
-    return <p className="text-muted-foreground">Loading...</p>
+    return <PageSkeleton />
   }
 
   return (

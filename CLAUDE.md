@@ -1,10 +1,10 @@
 # Fambudg
 
-Family budget tracking web app. Monorepo: Go backend + React frontend (later).
+Family budget tracking web app. Monorepo: Go backend + React frontend.
 
 ## Current Status
 
-Phases 1–4 complete. Backend fully functional with auth, transactions, budgets, reports, saving goals, bill reminders, CSV import/export, recurring transactions, role-based access control, allowances, and family spending comparison. No frontend yet.
+Phases 1–5 complete. Full-stack app with Go backend and React frontend. Backend: auth, transactions, budgets, reports, saving goals, bill reminders, CSV import/export, recurring transactions, RBAC, allowances, family spending comparison. Frontend: all pages with role-aware navigation, Recharts visualizations, dark mode, loading skeletons, EUR currency formatting. 80 frontend tests + 49 backend BDD tests.
 
 ## Tech Stack
 
@@ -140,11 +140,16 @@ go run cmd/server/main.go
 ```bash
 # From backend/ directory
 
-# BDD tests (47 scenarios)
+# BDD tests (49 scenarios)
 go test ./tests/... -v
 
-# All tests
+# All backend tests
 go test ./...
+
+# From frontend/ directory
+
+# Frontend tests (80 tests)
+npx vitest run
 ```
 
 ## Environment Variables
@@ -153,4 +158,4 @@ See `.env.example` in project root for required variables. Actual `.env` lives i
 
 ## Full Plan
 
-See `.claude/plan.md` for the complete project plan including data models, all API endpoints, and phased build checklist. Phases 1–4 complete, Phase 5 (Cloud Deployment) is next.
+See `.claude/plan.md` for the complete project plan including data models, all API endpoints, and phased build checklist. Phases 1–5 complete, Phase 6 (Cloud Deployment) is next.

@@ -1,9 +1,11 @@
 import { useAuth } from "@/context/auth-context"
+import { useTheme } from "@/hooks/use-theme"
 import { Button } from "@/components/ui/button"
-import { LogOut } from "lucide-react"
+import { LogOut, Moon, Sun } from "lucide-react"
 
 export function TopBar() {
   const { user, logout } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   if (!user) return null
 
   return (
@@ -17,6 +19,9 @@ export function TopBar() {
             {user.role}
           </span>
         </span>
+        <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
+          {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </Button>
         <Button variant="ghost" size="icon" onClick={logout} aria-label="Logout">
           <LogOut className="h-4 w-4" />
         </Button>

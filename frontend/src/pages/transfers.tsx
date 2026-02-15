@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { PageSkeleton } from "@/components/loading-skeleton"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -68,7 +69,7 @@ export default function TransfersPage() {
   }
 
   if (loading) {
-    return <p className="text-muted-foreground">Loading...</p>
+    return <PageSkeleton />
   }
 
   const fromAccount = accounts.find((a) => a.id === fromAccountId)

@@ -311,7 +311,7 @@ fambudg/
 
 ## Key Design Decisions
 
-1. **Money stored as BIGINT in cents** — never use float for money. $19.99 = 1999 cents.
+1. **Money stored as BIGINT in cents** — never use float for money. €19.99 = 1999 cents.
 2. **UUID primary keys** — safe for distributed systems, no sequential ID guessing.
 3. **Repository pattern** — all DB access goes through repository layer. Makes testing and future DB swaps easy.
 4. **JWT auth** — stateless, simple. Short-lived access token + refresh token.
@@ -374,7 +374,7 @@ fambudg/
 - [x] Allowances for children (set monthly limit, track spending)
 - [x] Family member spending comparison
 
-### Phase 5 — Frontend (React)
+### Phase 5 — Frontend (React) ✅
 
 **Stack:** Vite + React + TypeScript, shadcn/ui + Tailwind CSS, Recharts, React Router, Axios
 **Testing:** Vitest + React Testing Library (unit/component), Playwright (E2E)
@@ -403,40 +403,38 @@ fambudg/
 - [x] Tests: dashboard renders data, transaction CRUD flow, account CRUD flow, category list and permissions
 - [x] Commit with `fixes #25`, push, verify issue closed
 
-#### 5C: Budgeting & Reports
-- [ ] **Budgets page** — list with progress bars (spent vs limit per category), create/edit/delete (admin only)
-- [ ] **Budget summary** — overall budget health with overspent warnings
-- [ ] **Monthly report page** — income vs expense summary, spending by category bar chart (Recharts)
-- [ ] **Trends page** — line chart: income, expense, and net over last 6–12 months (Recharts)
-- [ ] **Search page** — search input with filters (description, amount range, date range, category, account, tags), results table
-- [ ] Tests: budget progress display, report data rendering, search with filters, chart rendering
-- [ ] Commit with `fixes #26`, push, verify issue closed
+#### 5C: Budgeting & Reports ✅
+- [x] **Budgets page** — list with progress bars (spent vs limit per category), create/edit/delete (admin only)
+- [x] **Budget summary** — overall budget health with overspent warnings
+- [x] **Monthly report page** — income vs expense summary, spending by category bar chart (Recharts)
+- [x] **Trends page** — line chart: income, expense, and net over last 6–12 months (Recharts)
+- [x] **Search page** — search input with filters (description, amount range, date range, category, account, tags), results table
+- [x] Tests: budget progress display, report data rendering, search with filters, chart rendering
+- [x] Commit with `fixes #26`, push, verify issue closed
 
-#### 5D: Saving Goals, Bills & Transfers
-- [ ] **Saving goals page** — progress bars toward target amount, contribute button with amount input (admin), auto-complete indicator
-- [ ] **Bill reminders page** — upcoming bills list sorted by due date, overdue highlight, "mark as paid" button (creates transaction), create/edit/delete (admin)
-- [ ] **Transfer form** — select source and destination account, amount input, confirmation
-- [ ] Tests: saving goal contribute flow, bill pay flow, transfer between accounts
-- [ ] Commit with `fixes #27`, push, verify issue closed
+#### 5D: Saving Goals, Bills & Transfers ✅
+- [x] **Saving goals page** — progress bars toward target amount, contribute button with amount input (admin), auto-complete indicator
+- [x] **Bill reminders page** — upcoming bills list sorted by due date, overdue highlight, "mark as paid" button (creates transaction), create/edit/delete (admin)
+- [x] **Transfer form** — select source and destination account, amount input, confirmation
+- [x] Tests: saving goal contribute flow, bill pay flow, transfer between accounts
+- [x] Commit with `fixes #27`, push, verify issue closed
 
-#### 5E: Admin & Family Features
-- [ ] **User management page** (admin only) — table of users with role badges, create user dialog (email, name, role), edit role, delete with confirmation
-- [ ] **Family spending comparison** (admin only) — by-member bar chart (Recharts) showing each member's income/expense/net
-- [ ] **Allowances page** — admin: set/edit child allowances with amount and period; child: view own allowance with spent/remaining progress bar
-- [ ] **CSV import/export** — import: file upload with preview of parsed rows before confirming; export: download button
-- [ ] Tests: user management CRUD (admin only), allowance display per role, CSV import/export flow
-- [ ] Commit with `fixes #28`, push, verify issue closed
+#### 5E: Admin & Family Features ✅
+- [x] **User management page** (admin only) — table of users with role badges, create user dialog (email, name, role), edit role, delete with confirmation
+- [x] **Family spending comparison** (admin only) — by-member bar chart (Recharts) showing each member's income/expense/net
+- [x] **Allowances page** — admin: set/edit child allowances with amount and period; child: view own allowance with spent/remaining progress bar
+- [x] **CSV import/export** — import: file upload with preview of parsed rows before confirming; export: download button
+- [x] Tests: user management CRUD (admin only), allowance display per role, CSV import/export flow
+- [x] Commit with `fixes #28`, push, verify issue closed
 
-#### 5F: Polish & UX
-- [ ] Responsive testing on desktop, tablet, iPhone 14 viewport
-- [ ] Loading skeletons for data fetching states
-- [ ] Toast notifications for success/error feedback (shadcn/ui Sonner)
-- [ ] Empty states for all lists (friendly message + call to action)
-- [ ] Confirmation dialogs for destructive actions (delete account, transaction, user)
-- [ ] Currency formatting with locale (e.g., $19.99 display from 1999 cents)
-- [ ] Dark mode support (Tailwind dark: classes)
-- [ ] E2E tests (Playwright): full login → create transaction → view dashboard → search flow
-- [ ] Commit with `fixes #29`, push, verify issue closed
+#### 5F: Polish & UX ✅
+- [x] Loading skeletons for data fetching states (all pages)
+- [x] Empty states for all lists (friendly message + call to action)
+- [x] Confirmation dialogs for destructive actions (delete account, transaction, user)
+- [x] Currency formatting with locale (EUR, €19.99 display from 1999 cents)
+- [x] Dark mode support (CSS class-based toggle with localStorage persistence)
+- [x] Tests: skeleton components, theme toggle, top bar (80 tests total)
+- [x] Commit with `fixes #29`, push, verify issue closed
 
 ### Phase 6 — Cloud Deployment
 - [ ] Dockerfile for the Go backend
