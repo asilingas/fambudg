@@ -344,13 +344,13 @@ fambudg/
 - [x] Test database setup and teardown
 
 ### Phase 2 — Budgeting & Reports
-- [ ] Budget CRUD (set monthly limits per category)
-- [ ] Budget vs actual summary endpoint
-- [ ] Dashboard overview endpoint (balances, month summary, recent transactions, goal progress)
-- [ ] Monthly income/expense report
-- [ ] Spending by category report
-- [ ] Spending by family member report
-- [ ] Search endpoint (by description, amount, date, category, account, tags)
+- [x] Budget CRUD (set monthly limits per category)
+- [x] Budget vs actual summary endpoint
+- [x] Dashboard overview endpoint (balances, month summary, recent transactions, goal progress)
+- [x] Monthly income/expense report
+- [x] Spending by category report
+- [x] Spending by family member report
+- [x] Search endpoint (by description, amount, date, category, account, tags)
 
 ### Phase 3 — Savings, Recurring & Bills
 - [ ] Saving goals CRUD
