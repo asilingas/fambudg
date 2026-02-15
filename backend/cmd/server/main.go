@@ -34,6 +34,7 @@ func main() {
 	categoryRepo := repository.NewCategoryRepository(pool)
 	transactionRepo := repository.NewTransactionRepository(pool)
 	budgetRepo := repository.NewBudgetRepository(pool)
+	reportRepo := repository.NewReportRepository(pool)
 
 	// Initialize services
 	authService := service.NewAuthService(userRepo, cfg.JWT.Secret)
@@ -41,6 +42,7 @@ func main() {
 	categoryService := service.NewCategoryService(categoryRepo)
 	transactionService := service.NewTransactionService(transactionRepo, accountRepo)
 	budgetService := service.NewBudgetService(budgetRepo)
+	reportService := service.NewReportService(reportRepo, accountRepo)
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(authService)
@@ -48,6 +50,7 @@ func main() {
 	categoryHandler := handler.NewCategoryHandler(categoryService)
 	transactionHandler := handler.NewTransactionHandler(transactionService)
 	budgetHandler := handler.NewBudgetHandler(budgetService)
+	reportHandler := handler.NewReportHandler(reportService)
 
 	// Create router
 	r := chi.NewRouter()
@@ -93,6 +96,15 @@ func main() {
 		r.Put("/api/budgets/{id}", budgetHandler.Update)
 		r.Delete("/api/budgets/{id}", budgetHandler.Delete)
 		r.Get("/api/budgets/summary", budgetHandler.Summary)
+
+		// Reports
+		r.Get("/api/reports/dashboard", reportHandler.Dashboard)
+		r.Get("/api/reports/monthly", reportHandler.Monthly)
+		r.Get("/api/reports/by-category", reportHandler.ByCategory)
+		r.Get("/api/reports/by-member", reportHandler.ByMember)
+
+		// Search
+		r.Get("/api/search", reportHandler.Search)
 	})
 
 	// Health check

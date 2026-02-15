@@ -18,12 +18,10 @@ type TestContext struct {
 	TransactionService *service.TransactionService
 	AccountService     *service.AccountService
 	CategoryService    *service.CategoryService
-	BudgetService      *service.BudgetService
 	UserRepo           *repository.UserRepository
 	AccountRepo        *repository.AccountRepository
 	CategoryRepo       *repository.CategoryRepository
 	TransactionRepo    *repository.TransactionRepository
-	BudgetRepo         *repository.BudgetRepository
 
 	// Test state
 	CurrentUser        any
@@ -31,10 +29,7 @@ type TestContext struct {
 	CurrentAccount     any
 	CurrentCategory    any
 	CurrentTransaction any
-	CurrentBudget      any
 	TransactionList    []any
-	BudgetList         []any
-	BudgetSummaryList  []any
 	LastError          error
 	LastStatusCode     int
 }
@@ -56,7 +51,6 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	// Register step definitions
 	registerAuthSteps(ctx, tc)
 	registerTransactionSteps(ctx, tc)
-	registerBudgetSteps(ctx, tc)
 }
 
 func (tc *TestContext) setupTestDatabase() error {
@@ -99,14 +93,12 @@ func (tc *TestContext) setupTestDatabase() error {
 	tc.AccountRepo = repository.NewAccountRepository(tc.Pool)
 	tc.CategoryRepo = repository.NewCategoryRepository(tc.Pool)
 	tc.TransactionRepo = repository.NewTransactionRepository(tc.Pool)
-	tc.BudgetRepo = repository.NewBudgetRepository(tc.Pool)
 
 	// Initialize services
 	tc.AuthService = service.NewAuthService(tc.UserRepo, cfg.JWT.Secret)
 	tc.AccountService = service.NewAccountService(tc.AccountRepo)
 	tc.CategoryService = service.NewCategoryService(tc.CategoryRepo)
 	tc.TransactionService = service.NewTransactionService(tc.TransactionRepo, tc.AccountRepo)
-	tc.BudgetService = service.NewBudgetService(tc.BudgetRepo)
 
 	return nil
 }
@@ -115,7 +107,7 @@ func (tc *TestContext) cleanupTestDatabase() {
 	if tc.Pool != nil {
 		// Clean up all tables
 		ctx := context.Background()
-		tc.Pool.Exec(ctx, "TRUNCATE budgets, transactions, accounts, categories, users CASCADE")
+		tc.Pool.Exec(ctx, "TRUNCATE transactions, accounts, categories, users CASCADE")
 		tc.Pool.Close()
 	}
 }
