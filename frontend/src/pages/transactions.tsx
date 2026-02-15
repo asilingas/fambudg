@@ -346,7 +346,7 @@ export default function TransactionsPage() {
                 <Select
                   value={form.type}
                   onValueChange={(v) =>
-                    setForm({ ...form, type: v as "income" | "expense" })
+                    setForm({ ...form, type: v as "income" | "expense", categoryId: "" })
                   }
                 >
                   <SelectTrigger id="tx-type">
@@ -401,11 +401,13 @@ export default function TransactionsPage() {
                   <SelectValue placeholder={t("transactions.selectCategory")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
+                  {categories
+                    .filter((c) => c.type === form.type)
+                    .map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
@@ -442,18 +444,20 @@ export default function TransactionsPage() {
               />
             </div>
 
-            <div className="flex items-center gap-2">
-              <input
-                id="tx-shared"
-                type="checkbox"
-                checked={form.isShared}
-                onChange={(e) =>
-                  setForm({ ...form, isShared: e.target.checked })
-                }
-                className="h-4 w-4 rounded border-input"
-              />
-              <Label htmlFor="tx-shared">{t("transactions.sharedExpense")}</Label>
-            </div>
+            {form.type === "expense" && (
+              <div className="flex items-center gap-2">
+                <input
+                  id="tx-shared"
+                  type="checkbox"
+                  checked={form.isShared}
+                  onChange={(e) =>
+                    setForm({ ...form, isShared: e.target.checked })
+                  }
+                  className="h-4 w-4 rounded border-input"
+                />
+                <Label htmlFor="tx-shared">{t("transactions.sharedExpense")}</Label>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
