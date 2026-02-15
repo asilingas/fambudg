@@ -52,6 +52,8 @@ type TestContext struct {
 	BillReminderList     []any
 	SecondAccount        any
 	RecurringResult      any
+	ExportedCSV          []string
+	ImportedCount        int
 	LastError            error
 	LastStatusCode       int
 }
@@ -81,6 +83,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	registerTransferSteps(ctx, tc)
 	registerTrendSteps(ctx, tc)
 	registerRecurringSteps(ctx, tc)
+	registerCSVSteps(ctx, tc)
 }
 
 func (tc *TestContext) setupTestDatabase() error {
