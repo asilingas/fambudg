@@ -22,6 +22,7 @@ type TestContext struct {
 	ReportService       *service.ReportService
 	SavingGoalService   *service.SavingGoalService
 	BillReminderService *service.BillReminderService
+	AllowanceService    *service.AllowanceService
 	UserRepo            *repository.UserRepository
 	AccountRepo         *repository.AccountRepository
 	CategoryRepo        *repository.CategoryRepository
@@ -36,12 +37,19 @@ type TestContext struct {
 	CurrentBudget        any
 	CurrentSavingGoal    any
 	CurrentBillReminder  any
+	CurrentAllowance     any
 	SecondAccount        any
+	CreatedUser          any
+	ChildUser            any
+	ChildAccount         any
+	ChildCategory        any
 	TransactionList      []any
 	BudgetList           []any
 	BudgetSummaryList    []any
 	SavingGoalList       []any
 	BillReminderList     []any
+	AllowanceList        []any
+	UserList             []any
 	CategoryReportResult []any
 	TrendResult          []any
 	DashboardResult      any
@@ -80,6 +88,8 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	registerRecurringSteps(ctx, tc)
 	registerBillReminderSteps(ctx, tc)
 	registerCSVSteps(ctx, tc)
+	registerRoleSteps(ctx, tc)
+	registerAllowanceSteps(ctx, tc)
 }
 
 func (tc *TestContext) setupTestDatabase() error {
@@ -126,6 +136,7 @@ func (tc *TestContext) setupTestDatabase() error {
 	reportRepo := repository.NewReportRepository(tc.Pool)
 	savingGoalRepo := repository.NewSavingGoalRepository(tc.Pool)
 	billReminderRepo := repository.NewBillReminderRepository(tc.Pool)
+	allowanceRepo := repository.NewAllowanceRepository(tc.Pool)
 
 	// Initialize services
 	tc.AuthService = service.NewAuthService(tc.UserRepo, cfg.JWT.Secret)
@@ -136,6 +147,7 @@ func (tc *TestContext) setupTestDatabase() error {
 	tc.ReportService = service.NewReportService(reportRepo, tc.AccountRepo)
 	tc.SavingGoalService = service.NewSavingGoalService(savingGoalRepo)
 	tc.BillReminderService = service.NewBillReminderService(billReminderRepo, tc.TransactionRepo, tc.AccountRepo)
+	tc.AllowanceService = service.NewAllowanceService(allowanceRepo)
 
 	return nil
 }
@@ -144,7 +156,7 @@ func (tc *TestContext) cleanupTestDatabase() {
 	if tc.Pool != nil {
 		// Clean up all tables
 		ctx := context.Background()
-		tc.Pool.Exec(ctx, "TRUNCATE transactions, bill_reminders, saving_goals, budgets, accounts, categories, users CASCADE")
+		tc.Pool.Exec(ctx, "TRUNCATE transactions, allowances, bill_reminders, saving_goals, budgets, accounts, categories, users CASCADE")
 		tc.Pool.Close()
 	}
 }
