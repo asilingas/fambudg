@@ -11,6 +11,7 @@ export const navItems: NavItem[] = [
   { label: "Dashboard", path: "/", icon: "LayoutDashboard", roles: ["admin", "member", "child"] },
   { label: "Transactions", path: "/transactions", icon: "ArrowLeftRight", roles: ["admin", "member", "child"] },
   { label: "Accounts", path: "/accounts", icon: "Wallet", roles: ["admin", "member", "child"] },
+  { label: "Categories", path: "/categories", icon: "Tag", roles: ["admin", "member", "child"] },
   { label: "Budgets", path: "/budgets", icon: "PiggyBank", roles: ["admin", "member"] },
   { label: "Reports", path: "/reports", icon: "BarChart3", roles: ["admin", "member", "child"] },
   { label: "Goals", path: "/goals", icon: "Target", roles: ["admin", "member"] },
