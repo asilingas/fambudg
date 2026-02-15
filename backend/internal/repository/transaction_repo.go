@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/asilingas/fambudg/backend/internal/model"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/asilingas/fambudg/backend/internal/model"
 )
 
 type TransactionRepository struct {

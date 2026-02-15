@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-playground/validator/v10"
 	"github.com/asilingas/fambudg/backend/internal/middleware"
 	"github.com/asilingas/fambudg/backend/internal/model"
 	"github.com/asilingas/fambudg/backend/internal/service"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-playground/validator/v10"
 )
 
 type AccountHandler struct {

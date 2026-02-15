@@ -5,13 +5,13 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/asilingas/fambudg/backend/internal/config"
 	"github.com/asilingas/fambudg/backend/internal/database"
 	"github.com/asilingas/fambudg/backend/internal/handler"
 	"github.com/asilingas/fambudg/backend/internal/middleware"
 	"github.com/asilingas/fambudg/backend/internal/repository"
 	"github.com/asilingas/fambudg/backend/internal/service"
+	"github.com/go-chi/chi/v5"
 )
 
 func main() {

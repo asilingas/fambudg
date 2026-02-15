@@ -7,12 +7,12 @@ import (
 	"os"
 	"testing"
 
-	"github.com/cucumber/godog"
-	"github.com/cucumber/godog/colors"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/asilingas/fambudg/backend/internal/config"
 	"github.com/asilingas/fambudg/backend/internal/repository"
 	"github.com/asilingas/fambudg/backend/internal/service"
+	"github.com/cucumber/godog"
+	"github.com/cucumber/godog/colors"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var opts = godog.Options{

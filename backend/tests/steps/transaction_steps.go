@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/cucumber/godog"
 	"github.com/asilingas/fambudg/backend/internal/model"
+	"github.com/cucumber/godog"
 )
 
 func registerTransactionSteps(ctx *godog.ScenarioContext, tc *TestContext) {

@@ -7,25 +7,25 @@ import (
 )
 
 type Transaction struct {
-	ID                  string        `json:"id"`
-	UserID              string        `json:"userId"`
-	AccountID           string        `json:"accountId"`
-	CategoryID          string        `json:"categoryId"`
-	Amount              int64         `json:"amount"` // in cents, positive=income, negative=expense
-	Type                string        `json:"type" validate:"required,oneof=expense income transfer"`
-	Description         string        `json:"description,omitempty"`
-	Date                time.Time     `json:"date"`
-	IsShared            bool          `json:"isShared"`
-	IsRecurring         bool          `json:"isRecurring"`
+	ID                  string         `json:"id"`
+	UserID              string         `json:"userId"`
+	AccountID           string         `json:"accountId"`
+	CategoryID          string         `json:"categoryId"`
+	Amount              int64          `json:"amount"` // in cents, positive=income, negative=expense
+	Type                string         `json:"type" validate:"required,oneof=expense income transfer"`
+	Description         string         `json:"description,omitempty"`
+	Date                time.Time      `json:"date"`
+	IsShared            bool           `json:"isShared"`
+	IsRecurring         bool           `json:"isRecurring"`
 	RecurringRule       *RecurringRule `json:"recurringRule,omitempty"`
-	Tags                []string      `json:"tags,omitempty"`
-	TransferToAccountID *string       `json:"transferToAccountId,omitempty"`
-	CreatedAt           time.Time     `json:"createdAt"`
-	UpdatedAt           time.Time     `json:"updatedAt"`
+	Tags                []string       `json:"tags,omitempty"`
+	TransferToAccountID *string        `json:"transferToAccountId,omitempty"`
+	CreatedAt           time.Time      `json:"createdAt"`
+	UpdatedAt           time.Time      `json:"updatedAt"`
 }
 
 type RecurringRule struct {
-	Frequency string `json:"frequency"` // daily, weekly, monthly, yearly
+	Frequency string `json:"frequency"`           // daily, weekly, monthly, yearly
 	Day       int    `json:"day,omitempty"`       // day of month for monthly
 	DayOfWeek int    `json:"dayOfWeek,omitempty"` // 0=Sunday, 6=Saturday for weekly
 }
@@ -62,13 +62,13 @@ type CreateTransactionRequest struct {
 }
 
 type UpdateTransactionRequest struct {
-	AccountID   *string        `json:"accountId,omitempty"`
-	CategoryID  *string        `json:"categoryId,omitempty"`
-	Amount      *int64         `json:"amount,omitempty"`
-	Description *string        `json:"description,omitempty"`
-	Date        *string        `json:"date,omitempty"` // YYYY-MM-DD format
-	IsShared    *bool          `json:"isShared,omitempty"`
-	Tags        []string       `json:"tags,omitempty"`
+	AccountID   *string  `json:"accountId,omitempty"`
+	CategoryID  *string  `json:"categoryId,omitempty"`
+	Amount      *int64   `json:"amount,omitempty"`
+	Description *string  `json:"description,omitempty"`
+	Date        *string  `json:"date,omitempty"` // YYYY-MM-DD format
+	IsShared    *bool    `json:"isShared,omitempty"`
+	Tags        []string `json:"tags,omitempty"`
 }
 
 type TransactionFilters struct {

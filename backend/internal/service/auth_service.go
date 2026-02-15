@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/asilingas/fambudg/backend/internal/model"
 	"github.com/asilingas/fambudg/backend/internal/repository"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type AuthService struct {

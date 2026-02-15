@@ -18,7 +18,7 @@ type CreateCategoryRequest struct {
 }
 
 type UpdateCategoryRequest struct {
-	Name      string  `json:"name" validate:"omitempty,min=2,max=100"`
-	Icon      string  `json:"icon,omitempty" validate:"omitempty,max=50"`
-	SortOrder *int    `json:"sortOrder,omitempty"`
+	Name      string `json:"name" validate:"omitempty,min=2,max=100"`
+	Icon      string `json:"icon,omitempty" validate:"omitempty,max=50"`
+	SortOrder *int   `json:"sortOrder,omitempty"`
 }
