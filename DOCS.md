@@ -1,6 +1,6 @@
 # Fambudg — User Guide
 
-Fambudg is a family budget tracking app. Track income, expenses, budgets, saving goals, and bills across your whole family with role-based access for parents and children.
+Fambudg is a family budget tracking app. Track income, expenses, budgets, saving goals, and bills across your whole family with role-based access for parents and children. Available in English and Lithuanian.
 
 ## Roles
 
@@ -43,14 +43,14 @@ Transactions are the core of the app — every income and expense you track.
 
 ### Creating a Transaction
 
-- **Amount** — in cents. Negative = expense, positive = income. For example, -1999 means a €19.99 expense.
-- **Type** — `income`, `expense`, or `transfer`.
+- **Type** — `income` or `expense`. This determines which categories are shown.
+- **Amount** — in euros (e.g., 19.99). Stored internally as cents.
 - **Account** — which account this transaction belongs to.
-- **Category** — what category (groceries, salary, utilities, etc.).
+- **Category** — filtered by the selected type (income categories for income, expense categories for expenses).
 - **Date** — when the transaction occurred.
 - **Description** — a note describing the transaction.
 - **Tags** — optional labels for extra organization (e.g., "vacation", "birthday").
-- **Shared** — mark as a shared family expense (`isShared: true`) or personal.
+- **Shared** — only shown for expenses. Mark as a shared family expense or personal.
 
 ### Filtering Transactions
 
@@ -215,3 +215,7 @@ Manage your family's accounts:
 | CSV Import/Export | Yes | Yes | No |
 | User Management | Yes | No | No |
 | Allowances | Manage all | No | View own |
+
+## Language
+
+The app supports English (default) and Lithuanian. Click the language toggle button (EN/LT) in the top bar to switch. Your preference is saved in the browser and persists across sessions.
