@@ -37,6 +37,7 @@ func main() {
 	reportRepo := repository.NewReportRepository(pool)
 	savingGoalRepo := repository.NewSavingGoalRepository(pool)
 	billReminderRepo := repository.NewBillReminderRepository(pool)
+	allowanceRepo := repository.NewAllowanceRepository(pool)
 
 	// Initialize services
 	authService := service.NewAuthService(userRepo, cfg.JWT.Secret)
@@ -47,6 +48,7 @@ func main() {
 	reportService := service.NewReportService(reportRepo, accountRepo)
 	savingGoalService := service.NewSavingGoalService(savingGoalRepo)
 	billReminderService := service.NewBillReminderService(billReminderRepo, transactionRepo, accountRepo)
+	allowanceService := service.NewAllowanceService(allowanceRepo)
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(authService)
@@ -60,6 +62,7 @@ func main() {
 	billReminderHandler := handler.NewBillReminderHandler(billReminderService)
 	transferHandler := handler.NewTransferHandler(transactionService)
 	importExportHandler := handler.NewImportExportHandler(transactionService)
+	allowanceHandler := handler.NewAllowanceHandler(allowanceService)
 
 	// Create router
 	r := chi.NewRouter()
@@ -104,6 +107,9 @@ func main() {
 
 		// Search (scoped to own in handler)
 		r.Get("/api/search", reportHandler.Search)
+
+		// Allowances (list: admin sees all, child sees own)
+		r.Get("/api/allowances", allowanceHandler.List)
 	})
 
 	// Admin + Member only routes
@@ -161,6 +167,10 @@ func main() {
 
 		// Family member spending comparison
 		r.Get("/api/reports/by-member", reportHandler.ByMember)
+
+		// Allowances management (admin only)
+		r.Post("/api/allowances", allowanceHandler.Create)
+		r.Put("/api/allowances/{id}", allowanceHandler.Update)
 	})
 
 	// Health check

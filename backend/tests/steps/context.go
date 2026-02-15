@@ -13,45 +13,45 @@ import (
 )
 
 type TestContext struct {
-	Pool               *pgxpool.Pool
-	AuthService        *service.AuthService
-	TransactionService *service.TransactionService
-	AccountService     *service.AccountService
-	CategoryService    *service.CategoryService
-	BudgetService      *service.BudgetService
-	ReportService      *service.ReportService
-	SavingGoalService  *service.SavingGoalService
+	Pool                *pgxpool.Pool
+	AuthService         *service.AuthService
+	TransactionService  *service.TransactionService
+	AccountService      *service.AccountService
+	CategoryService     *service.CategoryService
+	BudgetService       *service.BudgetService
+	ReportService       *service.ReportService
+	SavingGoalService   *service.SavingGoalService
 	BillReminderService *service.BillReminderService
-	UserRepo           *repository.UserRepository
-	AccountRepo        *repository.AccountRepository
-	CategoryRepo       *repository.CategoryRepository
-	TransactionRepo    *repository.TransactionRepository
+	UserRepo            *repository.UserRepository
+	AccountRepo         *repository.AccountRepository
+	CategoryRepo        *repository.CategoryRepository
+	TransactionRepo     *repository.TransactionRepository
 
 	// Test state
-	CurrentUser        any
-	CurrentToken       string
-	CurrentAccount     any
-	CurrentCategory    any
-	CurrentTransaction any
-	CurrentBudget      any
-	CurrentSavingGoal  any
-	CurrentBillReminder any
-	SecondAccount      any
-	TransactionList    []any
-	BudgetList         []any
-	BudgetSummaryList  []any
-	SavingGoalList     []any
-	BillReminderList   []any
+	CurrentUser          any
+	CurrentToken         string
+	CurrentAccount       any
+	CurrentCategory      any
+	CurrentTransaction   any
+	CurrentBudget        any
+	CurrentSavingGoal    any
+	CurrentBillReminder  any
+	SecondAccount        any
+	TransactionList      []any
+	BudgetList           []any
+	BudgetSummaryList    []any
+	SavingGoalList       []any
+	BillReminderList     []any
 	CategoryReportResult []any
-	TrendResult        []any
-	DashboardResult    any
-	MonthlyReportResult any
-	SearchResult       any
-	RecurringResult    any
-	ExportedCSV        []string
-	ImportedCount      int
-	LastError          error
-	LastStatusCode     int
+	TrendResult          []any
+	DashboardResult      any
+	MonthlyReportResult  any
+	SearchResult         any
+	RecurringResult      any
+	ExportedCSV          []string
+	ImportedCount        int
+	LastError            error
+	LastStatusCode       int
 }
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
