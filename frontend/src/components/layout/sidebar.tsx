@@ -8,6 +8,7 @@ import {
   BarChart3,
   Target,
   Receipt,
+  ArrowRightLeft,
   Search,
   Users,
   type LucideIcon,
@@ -25,6 +26,7 @@ const iconMap: Record<string, LucideIcon> = {
   BarChart3,
   Target,
   Receipt,
+  ArrowRightLeft,
   Search,
   Users,
 }

@@ -10,6 +10,7 @@ describe("getNavForRole", () => {
     expect(labels).toContain("Categories")
     expect(labels).toContain("Budgets")
     expect(labels).toContain("Bills")
+    expect(labels).toContain("Transfers")
     expect(labels).toContain("Search")
   })
 
@@ -18,6 +19,7 @@ describe("getNavForRole", () => {
     const labels = items.map((i) => i.label)
     expect(labels).toContain("Dashboard")
     expect(labels).toContain("Budgets")
+    expect(labels).toContain("Transfers")
     expect(labels).not.toContain("Users")
   })
 
@@ -33,6 +35,7 @@ describe("getNavForRole", () => {
     expect(labels).not.toContain("Budgets")
     expect(labels).not.toContain("Goals")
     expect(labels).not.toContain("Bills")
+    expect(labels).not.toContain("Transfers")
     expect(labels).not.toContain("Users")
   })
 })
