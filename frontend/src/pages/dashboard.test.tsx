@@ -20,7 +20,7 @@ const mockedApi = vi.mocked(api)
 
 const dashboardData = {
   accounts: [
-    { id: "1", userId: "u1", name: "Checking", type: "checking", currency: "USD", balance: 150000 },
+    { id: "1", userId: "u1", name: "Checking", type: "checking", currency: "EUR", balance: 150000 },
   ],
   monthSummary: {
     month: 2,
@@ -68,10 +68,10 @@ describe("DashboardPage", () => {
     renderWithProviders(<DashboardPage />)
 
     await waitFor(() => {
-      expect(screen.getByText("$5,000.00")).toBeInTheDocument()
+      expect(screen.getByText(/5\.000,00/)).toBeInTheDocument()
     })
-    expect(screen.getByText("$2,000.00")).toBeInTheDocument()
-    expect(screen.getByText("$3,000.00")).toBeInTheDocument()
+    expect(screen.getByText(/2\.000,00/)).toBeInTheDocument()
+    expect(screen.getByText(/3\.000,00/)).toBeInTheDocument()
   })
 
   it("renders account cards", async () => {
@@ -80,7 +80,7 @@ describe("DashboardPage", () => {
     await waitFor(() => {
       expect(screen.getByText("Checking")).toBeInTheDocument()
     })
-    expect(screen.getByText("$1,500.00")).toBeInTheDocument()
+    expect(screen.getByText(/1\.500,00/)).toBeInTheDocument()
   })
 
   it("renders recent transactions", async () => {
@@ -89,7 +89,7 @@ describe("DashboardPage", () => {
     await waitFor(() => {
       expect(screen.getByText("Groceries")).toBeInTheDocument()
     })
-    expect(screen.getByText("-$45.99")).toBeInTheDocument()
+    expect(screen.getByText(/-45,99/)).toBeInTheDocument()
   })
 
   it("shows empty state when no accounts", async () => {

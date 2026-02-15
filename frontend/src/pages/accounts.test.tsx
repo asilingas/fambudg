@@ -22,8 +22,8 @@ import api from "@/lib/api"
 const mockedApi = vi.mocked(api)
 
 const accounts = [
-  { id: "1", userId: "u1", name: "Checking", type: "checking", currency: "USD", balance: 150000, createdAt: "2026-01-01" },
-  { id: "2", userId: "u1", name: "Savings", type: "savings", currency: "USD", balance: 500000, createdAt: "2026-01-01" },
+  { id: "1", userId: "u1", name: "Checking", type: "checking", currency: "EUR", balance: 150000, createdAt: "2026-01-01" },
+  { id: "2", userId: "u1", name: "Savings", type: "savings", currency: "EUR", balance: 500000, createdAt: "2026-01-01" },
 ]
 
 beforeEach(() => {
@@ -48,8 +48,8 @@ describe("AccountsPage", () => {
       expect(screen.getByText("Checking")).toBeInTheDocument()
     })
     expect(screen.getByText("Savings")).toBeInTheDocument()
-    expect(screen.getByText("$1,500.00")).toBeInTheDocument()
-    expect(screen.getByText("$5,000.00")).toBeInTheDocument()
+    expect(screen.getByText(/1\.500,00/)).toBeInTheDocument()
+    expect(screen.getByText(/5\.000,00/)).toBeInTheDocument()
   })
 
   it("opens create dialog on add button click", async () => {

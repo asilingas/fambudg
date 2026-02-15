@@ -33,7 +33,7 @@ interface FormData {
   balance: string
 }
 
-const emptyForm: FormData = { name: "", type: "checking", currency: "USD", balance: "0.00" }
+const emptyForm: FormData = { name: "", type: "checking", currency: "EUR", balance: "0.00" }
 
 export default function AccountsPage() {
   const [accounts, setAccounts] = useState<Account[]>([])
@@ -225,7 +225,7 @@ export default function AccountsPage() {
                   setForm({ ...form, currency: e.target.value.toUpperCase() })
                 }
                 maxLength={3}
-                placeholder="USD"
+                placeholder="EUR"
               />
             </div>
             {!editing && (

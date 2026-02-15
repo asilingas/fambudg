@@ -43,7 +43,7 @@ Transactions are the core of the app — every income and expense you track.
 
 ### Creating a Transaction
 
-- **Amount** — in cents. Negative = expense, positive = income. For example, -1999 means a $19.99 expense.
+- **Amount** — in cents. Negative = expense, positive = income. For example, -1999 means a €19.99 expense.
 - **Type** — `income`, `expense`, or `transfer`.
 - **Account** — which account this transaction belongs to.
 - **Category** — what category (groceries, salary, utilities, etc.).

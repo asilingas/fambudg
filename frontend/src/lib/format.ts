@@ -1,9 +1,9 @@
 export function formatCents(cents: number): string {
-  const dollars = cents / 100
-  return new Intl.NumberFormat("en-US", {
+  const euros = cents / 100
+  return new Intl.NumberFormat("de-DE", {
     style: "currency",
-    currency: "USD",
-  }).format(dollars)
+    currency: "EUR",
+  }).format(euros)
 }
 
 export function centsToInput(cents: number): string {

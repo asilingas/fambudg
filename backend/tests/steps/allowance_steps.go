@@ -82,7 +82,7 @@ func (tc *TestContext) aChildUserExistsWithAccountAndCategory(email string) erro
 	acctReq := &model.CreateAccountRequest{
 		Name:     "Kid Account",
 		Type:     "checking",
-		Currency: "USD",
+		Currency: "EUR",
 	}
 	account, err := tc.AccountService.Create(context.Background(), childUser.ID, acctReq)
 	if err != nil {

@@ -25,7 +25,7 @@ func (tc *TestContext) aSecondAccountExists(name, accountType string) error {
 	req := &model.CreateAccountRequest{
 		Name:     name,
 		Type:     accountType,
-		Currency: "USD",
+		Currency: "EUR",
 		Balance:  0,
 	}
 
