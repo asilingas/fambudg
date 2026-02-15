@@ -23,7 +23,7 @@ func NewAccountHandler(accountService *service.AccountService) *AccountHandler {
 	}
 }
 
-// List returns all accounts for the authenticated user
+// List returns accounts — admin sees all, others see own
 func (h *AccountHandler) List(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	if userID == "" {
@@ -31,7 +31,17 @@ func (h *AccountHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accounts, err := h.accountService.GetByUserID(r.Context(), userID)
+	role := middleware.GetUserRole(r.Context())
+
+	var accounts []*model.Account
+	var err error
+
+	if role == "admin" {
+		accounts, err = h.accountService.GetAll(r.Context())
+	} else {
+		accounts, err = h.accountService.GetByUserID(r.Context(), userID)
+	}
+
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -68,8 +78,16 @@ func (h *AccountHandler) Create(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusCreated, account)
 }
 
-// Get returns a single account by ID
+// Get returns a single account by ID with ownership check
 func (h *AccountHandler) Get(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	if userID == "" {
+		respondWithError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	role := middleware.GetUserRole(r.Context())
+
 	accountID := chi.URLParam(r, "id")
 	if accountID == "" {
 		respondWithError(w, http.StatusBadRequest, "missing account ID")
@@ -82,14 +100,39 @@ func (h *AccountHandler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Non-admin users can only see their own accounts
+	if role != "admin" && account.UserID != userID {
+		respondWithError(w, http.StatusForbidden, "forbidden")
+		return
+	}
+
 	respondWithJSON(w, http.StatusOK, account)
 }
 
-// Update updates an existing account
+// Update updates an existing account with ownership check
 func (h *AccountHandler) Update(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	if userID == "" {
+		respondWithError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	role := middleware.GetUserRole(r.Context())
+
 	accountID := chi.URLParam(r, "id")
 	if accountID == "" {
 		respondWithError(w, http.StatusBadRequest, "missing account ID")
+		return
+	}
+
+	// Check ownership for non-admin
+	existing, err := h.accountService.GetByID(r.Context(), accountID)
+	if err != nil {
+		respondWithError(w, http.StatusNotFound, err.Error())
+		return
+	}
+	if role != "admin" && existing.UserID != userID {
+		respondWithError(w, http.StatusForbidden, "forbidden")
 		return
 	}
 
@@ -113,11 +156,30 @@ func (h *AccountHandler) Update(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, account)
 }
 
-// Delete deletes an account
+// Delete deletes an account with ownership check
 func (h *AccountHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	if userID == "" {
+		respondWithError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	role := middleware.GetUserRole(r.Context())
+
 	accountID := chi.URLParam(r, "id")
 	if accountID == "" {
 		respondWithError(w, http.StatusBadRequest, "missing account ID")
+		return
+	}
+
+	// Check ownership for non-admin
+	existing, err := h.accountService.GetByID(r.Context(), accountID)
+	if err != nil {
+		respondWithError(w, http.StatusNotFound, err.Error())
+		return
+	}
+	if role != "admin" && existing.UserID != userID {
+		respondWithError(w, http.StatusForbidden, "forbidden")
 		return
 	}
 

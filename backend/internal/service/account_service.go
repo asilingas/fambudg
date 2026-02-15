@@ -27,6 +27,10 @@ func (s *AccountService) GetByUserID(ctx context.Context, userID string) ([]*mod
 	return s.accountRepo.FindByUserID(ctx, userID)
 }
 
+func (s *AccountService) GetAll(ctx context.Context) ([]*model.Account, error) {
+	return s.accountRepo.FindAll(ctx)
+}
+
 func (s *AccountService) Update(ctx context.Context, id string, req *model.UpdateAccountRequest) (*model.Account, error) {
 	return s.accountRepo.Update(ctx, id, req)
 }

@@ -27,6 +27,8 @@ func (h *ReportHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	role := middleware.GetUserRole(r.Context())
+
 	// Default to current month/year
 	now := time.Now()
 	month := now.Month()
@@ -50,7 +52,15 @@ func (h *ReportHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 		year = parsed
 	}
 
-	dashboard, err := h.reportService.GetDashboard(r.Context(), userID, int(month), year)
+	var dashboard *model.DashboardResponse
+	var err error
+
+	if role == "admin" {
+		dashboard, err = h.reportService.GetDashboardAll(r.Context(), int(month), year)
+	} else {
+		dashboard, err = h.reportService.GetDashboard(r.Context(), userID, int(month), year)
+	}
+
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -66,13 +76,22 @@ func (h *ReportHandler) Monthly(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	role := middleware.GetUserRole(r.Context())
+
 	month, year, err := parseMonthYear(r)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	summary, err := h.reportService.GetMonthlySummary(r.Context(), userID, month, year)
+	var summary *model.MonthSummary
+
+	if role == "admin" {
+		summary, err = h.reportService.GetMonthlySummaryAll(r.Context(), month, year)
+	} else {
+		summary, err = h.reportService.GetMonthlySummary(r.Context(), userID, month, year)
+	}
+
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -88,13 +107,22 @@ func (h *ReportHandler) ByCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	role := middleware.GetUserRole(r.Context())
+
 	month, year, err := parseMonthYear(r)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	spending, err := h.reportService.GetSpendingByCategory(r.Context(), userID, month, year)
+	var spending []*model.CategorySpending
+
+	if role == "admin" {
+		spending, err = h.reportService.GetSpendingByCategoryAll(r.Context(), month, year)
+	} else {
+		spending, err = h.reportService.GetSpendingByCategory(r.Context(), userID, month, year)
+	}
+
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -125,6 +153,8 @@ func (h *ReportHandler) Search(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
+
+	role := middleware.GetUserRole(r.Context())
 
 	filters := &model.SearchFilters{
 		UserID:      userID,
@@ -157,7 +187,15 @@ func (h *ReportHandler) Search(w http.ResponseWriter, r *http.Request) {
 		filters.Tags = strings.Split(tagsStr, ",")
 	}
 
-	results, err := h.reportService.SearchTransactions(r.Context(), filters)
+	var results *model.SearchResult
+	var err error
+
+	if role == "admin" {
+		results, err = h.reportService.SearchTransactionsAll(r.Context(), filters)
+	} else {
+		results, err = h.reportService.SearchTransactions(r.Context(), filters)
+	}
+
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -173,6 +211,8 @@ func (h *ReportHandler) Trends(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	role := middleware.GetUserRole(r.Context())
+
 	months := 6
 	if m := r.URL.Query().Get("months"); m != "" {
 		parsed, err := strconv.Atoi(m)
@@ -183,7 +223,15 @@ func (h *ReportHandler) Trends(w http.ResponseWriter, r *http.Request) {
 		months = parsed
 	}
 
-	trends, err := h.reportService.GetTrends(r.Context(), userID, months)
+	var trends []*model.TrendPoint
+	var err error
+
+	if role == "admin" {
+		trends, err = h.reportService.GetTrendsAll(r.Context(), months)
+	} else {
+		trends, err = h.reportService.GetTrends(r.Context(), userID, months)
+	}
+
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return

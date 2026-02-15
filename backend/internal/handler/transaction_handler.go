@@ -31,6 +31,8 @@ func (h *TransactionHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	role := middleware.GetUserRole(r.Context())
+
 	// Parse query parameters for filters
 	filters := &model.TransactionFilters{
 		AccountID:  r.URL.Query().Get("accountId"),
@@ -45,7 +47,15 @@ func (h *TransactionHandler) List(w http.ResponseWriter, r *http.Request) {
 		filters.IsShared = &isShared
 	}
 
-	transactions, err := h.transactionService.GetByUserID(r.Context(), userID, filters)
+	var transactions []*model.Transaction
+	var err error
+
+	if role == "admin" {
+		transactions, err = h.transactionService.GetAll(r.Context(), filters)
+	} else {
+		transactions, err = h.transactionService.GetByUserID(r.Context(), userID, filters)
+	}
+
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -82,6 +92,14 @@ func (h *TransactionHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TransactionHandler) Get(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	if userID == "" {
+		respondWithError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	role := middleware.GetUserRole(r.Context())
+
 	transactionID := chi.URLParam(r, "id")
 	if transactionID == "" {
 		respondWithError(w, http.StatusBadRequest, "missing transaction ID")
@@ -94,13 +112,38 @@ func (h *TransactionHandler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Non-admin users can only see their own transactions
+	if role != "admin" && transaction.UserID != userID {
+		respondWithError(w, http.StatusForbidden, "forbidden")
+		return
+	}
+
 	respondWithJSON(w, http.StatusOK, transaction)
 }
 
 func (h *TransactionHandler) Update(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	if userID == "" {
+		respondWithError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	role := middleware.GetUserRole(r.Context())
+
 	transactionID := chi.URLParam(r, "id")
 	if transactionID == "" {
 		respondWithError(w, http.StatusBadRequest, "missing transaction ID")
+		return
+	}
+
+	// Check ownership for non-admin
+	existing, err := h.transactionService.GetByID(r.Context(), transactionID)
+	if err != nil {
+		respondWithError(w, http.StatusNotFound, err.Error())
+		return
+	}
+	if role != "admin" && existing.UserID != userID {
+		respondWithError(w, http.StatusForbidden, "forbidden")
 		return
 	}
 
@@ -125,9 +168,28 @@ func (h *TransactionHandler) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TransactionHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	if userID == "" {
+		respondWithError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	role := middleware.GetUserRole(r.Context())
+
 	transactionID := chi.URLParam(r, "id")
 	if transactionID == "" {
 		respondWithError(w, http.StatusBadRequest, "missing transaction ID")
+		return
+	}
+
+	// Check ownership for non-admin
+	existing, err := h.transactionService.GetByID(r.Context(), transactionID)
+	if err != nil {
+		respondWithError(w, http.StatusNotFound, err.Error())
+		return
+	}
+	if role != "admin" && existing.UserID != userID {
+		respondWithError(w, http.StatusForbidden, "forbidden")
 		return
 	}
 

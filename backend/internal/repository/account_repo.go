@@ -85,6 +85,32 @@ func (r *AccountRepository) FindByUserID(ctx context.Context, userID string) ([]
 	return accounts, nil
 }
 
+// FindAll returns all accounts (for admin)
+func (r *AccountRepository) FindAll(ctx context.Context) ([]*model.Account, error) {
+	query := `
+		SELECT id, user_id, name, type, currency, balance, created_at
+		FROM accounts
+		ORDER BY created_at DESC
+	`
+
+	rows, err := r.db.Query(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find accounts: %w", err)
+	}
+	defer rows.Close()
+
+	var accounts []*model.Account
+	for rows.Next() {
+		account := &model.Account{}
+		if err := rows.Scan(&account.ID, &account.UserID, &account.Name, &account.Type, &account.Currency, &account.Balance, &account.CreatedAt); err != nil {
+			return nil, fmt.Errorf("failed to scan account: %w", err)
+		}
+		accounts = append(accounts, account)
+	}
+
+	return accounts, nil
+}
+
 // Update updates an account
 func (r *AccountRepository) Update(ctx context.Context, id string, req *model.UpdateAccountRequest) (*model.Account, error) {
 	query := `

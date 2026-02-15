@@ -365,14 +365,14 @@ fambudg/
 - [x] CSV import (transactions)
 - [x] CSV export (transactions)
 
-### Phase 4 — Multi-User & Permissions
-- [ ] User roles (admin, member, child)
-- [ ] Role-based access control middleware
-- [ ] Admin can manage all users
-- [ ] Children see limited data (own spending only)
-- [ ] Shared vs personal expense flag (is_shared on transactions)
-- [ ] Allowances for children (set monthly limit, track spending)
-- [ ] Family member spending comparison
+### Phase 4 — Multi-User & Permissions ✅
+- [x] User roles (admin, member, child)
+- [x] Role-based access control middleware
+- [x] Admin can manage all users
+- [x] Children see limited data (own spending only)
+- [x] Shared vs personal expense flag (is_shared on transactions)
+- [x] Allowances for children (set monthly limit, track spending)
+- [x] Family member spending comparison
 
 ### Phase 5 — Cloud Deployment
 - [ ] Dockerfile for the Go backend

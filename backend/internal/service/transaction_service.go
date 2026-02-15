@@ -51,6 +51,10 @@ func (s *TransactionService) GetByUserID(ctx context.Context, userID string, fil
 	return s.transactionRepo.FindByUserID(ctx, userID, filters)
 }
 
+func (s *TransactionService) GetAll(ctx context.Context, filters *model.TransactionFilters) ([]*model.Transaction, error) {
+	return s.transactionRepo.FindAll(ctx, filters)
+}
+
 func (s *TransactionService) Update(ctx context.Context, id string, req *model.UpdateTransactionRequest) (*model.Transaction, error) {
 	// Get original transaction to calculate balance difference
 	original, err := s.transactionRepo.FindByID(ctx, id)

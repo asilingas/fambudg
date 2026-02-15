@@ -82,7 +82,7 @@ func main() {
 		// Auth
 		r.Get("/api/auth/me", authHandler.GetMe)
 
-		// Accounts (scoped to own in handler)
+		// Accounts (admin sees all, others see own; ownership checks in handler)
 		r.Get("/api/accounts", accountHandler.List)
 		r.Post("/api/accounts", accountHandler.Create)
 		r.Get("/api/accounts/{id}", accountHandler.Get)
@@ -92,64 +92,53 @@ func main() {
 		// Categories (read for all)
 		r.Get("/api/categories", categoryHandler.List)
 
-		// Transactions (scoped to own in handler for child/member)
+		// Transactions (admin sees all, others see own; ownership checks in handler)
 		r.Get("/api/transactions", transactionHandler.List)
 		r.Post("/api/transactions", transactionHandler.Create)
 		r.Get("/api/transactions/{id}", transactionHandler.Get)
 		r.Put("/api/transactions/{id}", transactionHandler.Update)
 		r.Delete("/api/transactions/{id}", transactionHandler.Delete)
 
-		// Reports (scoped to own data in handler for child/member)
+		// Reports (admin sees all data, others see own)
 		r.Get("/api/reports/dashboard", reportHandler.Dashboard)
 		r.Get("/api/reports/monthly", reportHandler.Monthly)
 		r.Get("/api/reports/by-category", reportHandler.ByCategory)
 		r.Get("/api/reports/trends", reportHandler.Trends)
 
-		// Search (scoped to own in handler)
+		// Search (admin searches all, others search own)
 		r.Get("/api/search", reportHandler.Search)
 
 		// Allowances (list: admin sees all, child sees own)
 		r.Get("/api/allowances", allowanceHandler.List)
 	})
 
-	// Admin + Member only routes
+	// Admin + Member routes (read access to budgets/goals/reminders + write categories)
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.AuthMiddleware(authService))
 		r.Use(middleware.RequireRole("admin", "member"))
 
-		// Categories CRUD (create/update/delete)
+		// Categories create (admin + member)
 		r.Post("/api/categories", categoryHandler.Create)
-		r.Put("/api/categories/{id}", categoryHandler.Update)
-		r.Delete("/api/categories/{id}", categoryHandler.Delete)
 
-		// Budgets
+		// Budgets read (admin + member)
 		r.Get("/api/budgets", budgetHandler.List)
-		r.Post("/api/budgets", budgetHandler.Create)
-		r.Put("/api/budgets/{id}", budgetHandler.Update)
-		r.Delete("/api/budgets/{id}", budgetHandler.Delete)
 		r.Get("/api/budgets/summary", budgetHandler.Summary)
 
-		// Saving Goals
+		// Saving Goals read (admin + member)
 		r.Get("/api/saving-goals", savingGoalHandler.List)
-		r.Post("/api/saving-goals", savingGoalHandler.Create)
-		r.Put("/api/saving-goals/{id}", savingGoalHandler.Update)
-		r.Post("/api/saving-goals/{id}/contribute", savingGoalHandler.Contribute)
 
-		// Bill Reminders
+		// Bill Reminders read + pay (admin + member)
 		r.Get("/api/bill-reminders", billReminderHandler.List)
 		r.Get("/api/bill-reminders/upcoming", billReminderHandler.Upcoming)
-		r.Post("/api/bill-reminders", billReminderHandler.Create)
-		r.Put("/api/bill-reminders/{id}", billReminderHandler.Update)
-		r.Delete("/api/bill-reminders/{id}", billReminderHandler.Delete)
 		r.Post("/api/bill-reminders/{id}/pay", billReminderHandler.Pay)
 
-		// Transfers
+		// Transfers (admin + member)
 		r.Post("/api/transfers", transferHandler.Create)
 
-		// Recurring transactions
+		// Recurring transactions (admin + member)
 		r.Post("/api/transactions/generate-recurring", transactionHandler.GenerateRecurring)
 
-		// Import / Export
+		// Import / Export (admin + member)
 		r.Post("/api/import/csv", importExportHandler.ImportCSV)
 		r.Get("/api/export/csv", importExportHandler.ExportCSV)
 	})
@@ -164,6 +153,25 @@ func main() {
 		r.Post("/api/users", userHandler.Create)
 		r.Put("/api/users/{id}", userHandler.Update)
 		r.Delete("/api/users/{id}", userHandler.Delete)
+
+		// Categories update/delete (admin only)
+		r.Put("/api/categories/{id}", categoryHandler.Update)
+		r.Delete("/api/categories/{id}", categoryHandler.Delete)
+
+		// Budgets write (admin only)
+		r.Post("/api/budgets", budgetHandler.Create)
+		r.Put("/api/budgets/{id}", budgetHandler.Update)
+		r.Delete("/api/budgets/{id}", budgetHandler.Delete)
+
+		// Saving Goals write (admin only)
+		r.Post("/api/saving-goals", savingGoalHandler.Create)
+		r.Put("/api/saving-goals/{id}", savingGoalHandler.Update)
+		r.Post("/api/saving-goals/{id}/contribute", savingGoalHandler.Contribute)
+
+		// Bill Reminders write (admin only)
+		r.Post("/api/bill-reminders", billReminderHandler.Create)
+		r.Put("/api/bill-reminders/{id}", billReminderHandler.Update)
+		r.Delete("/api/bill-reminders/{id}", billReminderHandler.Delete)
 
 		// Family member spending comparison
 		r.Get("/api/reports/by-member", reportHandler.ByMember)

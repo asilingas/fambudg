@@ -146,6 +146,78 @@ func (r *TransactionRepository) FindByUserID(ctx context.Context, userID string,
 	return transactions, nil
 }
 
+// FindAll returns all transactions with optional filters (for admin)
+func (r *TransactionRepository) FindAll(ctx context.Context, filters *model.TransactionFilters) ([]*model.Transaction, error) {
+	query := `
+		SELECT id, user_id, account_id, category_id, amount, type, description, date, is_shared, is_recurring, recurring_rule, tags, transfer_to_account_id, created_at, updated_at
+		FROM transactions
+		WHERE 1=1
+	`
+
+	args := []any{}
+	argPos := 1
+
+	if filters.AccountID != "" {
+		query += fmt.Sprintf(" AND account_id = $%d", argPos)
+		args = append(args, filters.AccountID)
+		argPos++
+	}
+
+	if filters.CategoryID != "" {
+		query += fmt.Sprintf(" AND category_id = $%d", argPos)
+		args = append(args, filters.CategoryID)
+		argPos++
+	}
+
+	if filters.Type != "" {
+		query += fmt.Sprintf(" AND type = $%d", argPos)
+		args = append(args, filters.Type)
+		argPos++
+	}
+
+	if filters.StartDate != "" {
+		query += fmt.Sprintf(" AND date >= $%d", argPos)
+		args = append(args, filters.StartDate)
+		argPos++
+	}
+
+	if filters.EndDate != "" {
+		query += fmt.Sprintf(" AND date <= $%d", argPos)
+		args = append(args, filters.EndDate)
+		argPos++
+	}
+
+	if filters.IsShared != nil {
+		query += fmt.Sprintf(" AND is_shared = $%d", argPos)
+		args = append(args, *filters.IsShared)
+		argPos++
+	}
+
+	query += " ORDER BY date DESC, created_at DESC"
+
+	rows, err := r.db.Query(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find transactions: %w", err)
+	}
+	defer rows.Close()
+
+	var transactions []*model.Transaction
+	for rows.Next() {
+		transaction := &model.Transaction{}
+		if err := rows.Scan(
+			&transaction.ID, &transaction.UserID, &transaction.AccountID, &transaction.CategoryID,
+			&transaction.Amount, &transaction.Type, &transaction.Description, &transaction.Date,
+			&transaction.IsShared, &transaction.IsRecurring, &transaction.RecurringRule,
+			&transaction.Tags, &transaction.TransferToAccountID, &transaction.CreatedAt, &transaction.UpdatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan transaction: %w", err)
+		}
+		transactions = append(transactions, transaction)
+	}
+
+	return transactions, nil
+}
+
 func (r *TransactionRepository) Update(ctx context.Context, id string, req *model.UpdateTransactionRequest) (*model.Transaction, error) {
 	// Build dynamic update query
 	updates := []string{}
