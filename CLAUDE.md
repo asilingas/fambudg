@@ -57,7 +57,9 @@ Request flow: Router → Middleware → Handler → Service → Repository → D
 ## Key Conventions
 
 - Money stored as `BIGINT` in cents (never floats). $19.99 = 1999
-- UUID primary keys everywhere
+- `id BIGSERIAL PRIMARY KEY` + `uuid UUID UNIQUE NOT NULL DEFAULT gen_random_uuid()` on all tables
+- Integer `id` used for FK constraints/joins; `uuid` column exposed via API
+- FK columns are `BIGINT` referencing integer `id`; repositories resolve UUIDs via subqueries/JOINs
 - Positive amounts = income, negative = expense
 - All timestamps as `TIMESTAMPTZ` in UTC
 - Table names: snake_case, plural (e.g., `transactions`, `saving_goals`)

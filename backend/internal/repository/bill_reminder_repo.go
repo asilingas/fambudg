@@ -28,9 +28,19 @@ func (r *BillReminderRepository) Create(ctx context.Context, req *model.CreateBi
 	}
 
 	query := `
-		INSERT INTO bill_reminders (name, amount, due_day, frequency, category_id, account_id, next_due_date)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
-		RETURNING id, name, amount, due_day, frequency, category_id, account_id, is_active, next_due_date, created_at, updated_at
+		WITH inserted AS (
+			INSERT INTO bill_reminders (name, amount, due_day, frequency, category_id, account_id, next_due_date)
+			VALUES ($1, $2, $3, $4,
+				(SELECT id FROM categories WHERE uuid = $5),
+				(SELECT id FROM accounts WHERE uuid = $6),
+				$7)
+			RETURNING *
+		)
+		SELECT i.uuid, i.name, i.amount, i.due_day, i.frequency,
+			c.uuid, a.uuid, i.is_active, i.next_due_date, i.created_at, i.updated_at
+		FROM inserted i
+		LEFT JOIN categories c ON c.id = i.category_id
+		LEFT JOIN accounts a ON a.id = i.account_id
 	`
 
 	err = r.db.QueryRow(ctx, query,
@@ -50,9 +60,12 @@ func (r *BillReminderRepository) Create(ctx context.Context, req *model.CreateBi
 func (r *BillReminderRepository) FindByID(ctx context.Context, id string) (*model.BillReminder, error) {
 	bill := &model.BillReminder{}
 	query := `
-		SELECT id, name, amount, due_day, frequency, category_id, account_id, is_active, next_due_date, created_at, updated_at
-		FROM bill_reminders
-		WHERE id = $1
+		SELECT br.uuid, br.name, br.amount, br.due_day, br.frequency,
+			c.uuid, a.uuid, br.is_active, br.next_due_date, br.created_at, br.updated_at
+		FROM bill_reminders br
+		LEFT JOIN categories c ON c.id = br.category_id
+		LEFT JOIN accounts a ON a.id = br.account_id
+		WHERE br.uuid = $1
 	`
 
 	err := r.db.QueryRow(ctx, query, id).Scan(
@@ -72,9 +85,12 @@ func (r *BillReminderRepository) FindByID(ctx context.Context, id string) (*mode
 
 func (r *BillReminderRepository) FindAll(ctx context.Context) ([]*model.BillReminder, error) {
 	query := `
-		SELECT id, name, amount, due_day, frequency, category_id, account_id, is_active, next_due_date, created_at, updated_at
-		FROM bill_reminders
-		ORDER BY next_due_date ASC
+		SELECT br.uuid, br.name, br.amount, br.due_day, br.frequency,
+			c.uuid, a.uuid, br.is_active, br.next_due_date, br.created_at, br.updated_at
+		FROM bill_reminders br
+		LEFT JOIN categories c ON c.id = br.category_id
+		LEFT JOIN accounts a ON a.id = br.account_id
+		ORDER BY br.next_due_date ASC
 	`
 
 	rows, err := r.db.Query(ctx, query)
@@ -101,10 +117,13 @@ func (r *BillReminderRepository) FindAll(ctx context.Context) ([]*model.BillRemi
 
 func (r *BillReminderRepository) FindUpcoming(ctx context.Context, days int) ([]*model.BillReminder, error) {
 	query := `
-		SELECT id, name, amount, due_day, frequency, category_id, account_id, is_active, next_due_date, created_at, updated_at
-		FROM bill_reminders
-		WHERE is_active = true AND next_due_date <= CURRENT_DATE + make_interval(days => $1)
-		ORDER BY next_due_date ASC
+		SELECT br.uuid, br.name, br.amount, br.due_day, br.frequency,
+			c.uuid, a.uuid, br.is_active, br.next_due_date, br.created_at, br.updated_at
+		FROM bill_reminders br
+		LEFT JOIN categories c ON c.id = br.category_id
+		LEFT JOIN accounts a ON a.id = br.account_id
+		WHERE br.is_active = true AND br.next_due_date <= CURRENT_DATE + make_interval(days => $1)
+		ORDER BY br.next_due_date ASC
 	`
 
 	rows, err := r.db.Query(ctx, query, days)
@@ -159,13 +178,13 @@ func (r *BillReminderRepository) Update(ctx context.Context, id string, req *mod
 	}
 
 	if req.CategoryID != nil {
-		updates = append(updates, fmt.Sprintf("category_id = $%d", argPos))
+		updates = append(updates, fmt.Sprintf("category_id = (SELECT id FROM categories WHERE uuid = $%d)", argPos))
 		args = append(args, *req.CategoryID)
 		argPos++
 	}
 
 	if req.AccountID != nil {
-		updates = append(updates, fmt.Sprintf("account_id = $%d", argPos))
+		updates = append(updates, fmt.Sprintf("account_id = (SELECT id FROM accounts WHERE uuid = $%d)", argPos))
 		args = append(args, *req.AccountID)
 		argPos++
 	}
@@ -184,10 +203,17 @@ func (r *BillReminderRepository) Update(ctx context.Context, id string, req *mod
 
 	args = append(args, id)
 	query := fmt.Sprintf(`
-		UPDATE bill_reminders
-		SET %s
-		WHERE id = $%d
-		RETURNING id, name, amount, due_day, frequency, category_id, account_id, is_active, next_due_date, created_at, updated_at
+		WITH updated AS (
+			UPDATE bill_reminders
+			SET %s
+			WHERE uuid = $%d
+			RETURNING *
+		)
+		SELECT up.uuid, up.name, up.amount, up.due_day, up.frequency,
+			c.uuid, a.uuid, up.is_active, up.next_due_date, up.created_at, up.updated_at
+		FROM updated up
+		LEFT JOIN categories c ON c.id = up.category_id
+		LEFT JOIN accounts a ON a.id = up.account_id
 	`, strings.Join(updates, ", "), argPos)
 
 	bill := &model.BillReminder{}
@@ -207,7 +233,7 @@ func (r *BillReminderRepository) Update(ctx context.Context, id string, req *mod
 }
 
 func (r *BillReminderRepository) Delete(ctx context.Context, id string) error {
-	query := `DELETE FROM bill_reminders WHERE id = $1`
+	query := `DELETE FROM bill_reminders WHERE uuid = $1`
 	result, err := r.db.Exec(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete bill reminder: %w", err)
@@ -233,7 +259,7 @@ func (r *BillReminderRepository) AdvanceNextDueDate(ctx context.Context, id stri
 		nextDate = currentDueDate.AddDate(0, 1, 0)
 	}
 
-	query := `UPDATE bill_reminders SET next_due_date = $1, updated_at = NOW() WHERE id = $2`
+	query := `UPDATE bill_reminders SET next_due_date = $1, updated_at = NOW() WHERE uuid = $2`
 	_, err := r.db.Exec(ctx, query, nextDate, id)
 	if err != nil {
 		return fmt.Errorf("failed to advance next due date: %w", err)

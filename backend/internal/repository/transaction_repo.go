@@ -19,51 +19,67 @@ func NewTransactionRepository(db *pgxpool.Pool) *TransactionRepository {
 	return &TransactionRepository{db: db}
 }
 
+const txnSelectCols = `t.uuid, u.uuid, acc.uuid, cat.uuid, t.amount, t.type, t.description, t.date, t.is_shared, t.is_recurring, t.recurring_rule, t.tags, xfer.uuid, t.created_at, t.updated_at`
+
+const txnJoins = `
+	FROM transactions t
+	JOIN users u ON u.id = t.user_id
+	JOIN accounts acc ON acc.id = t.account_id
+	JOIN categories cat ON cat.id = t.category_id
+	LEFT JOIN accounts xfer ON xfer.id = t.transfer_to_account_id`
+
+func scanTransaction(row interface{ Scan(dest ...any) error }) (*model.Transaction, error) {
+	t := &model.Transaction{}
+	err := row.Scan(
+		&t.ID, &t.UserID, &t.AccountID, &t.CategoryID,
+		&t.Amount, &t.Type, &t.Description, &t.Date,
+		&t.IsShared, &t.IsRecurring, &t.RecurringRule,
+		&t.Tags, &t.TransferToAccountID, &t.CreatedAt, &t.UpdatedAt,
+	)
+	return t, err
+}
+
 func (r *TransactionRepository) Create(ctx context.Context, userID string, req *model.CreateTransactionRequest) (*model.Transaction, error) {
 	date, err := time.Parse("2006-01-02", req.Date)
 	if err != nil {
 		return nil, fmt.Errorf("invalid date format: %w", err)
 	}
 
-	transaction := &model.Transaction{}
 	query := `
-		INSERT INTO transactions (user_id, account_id, category_id, amount, type, description, date, is_shared, is_recurring, recurring_rule, tags, transfer_to_account_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-		RETURNING id, user_id, account_id, category_id, amount, type, description, date, is_shared, is_recurring, recurring_rule, tags, transfer_to_account_id, created_at, updated_at
+		WITH inserted AS (
+			INSERT INTO transactions (user_id, account_id, category_id, amount, type, description, date, is_shared, is_recurring, recurring_rule, tags, transfer_to_account_id)
+			VALUES (
+				(SELECT id FROM users WHERE uuid = $1),
+				(SELECT id FROM accounts WHERE uuid = $2),
+				(SELECT id FROM categories WHERE uuid = $3),
+				$4, $5, $6, $7, $8, $9, $10, $11,
+				(SELECT id FROM accounts WHERE uuid = $12)
+			)
+			RETURNING *
+		)
+		SELECT i.uuid, u.uuid, acc.uuid, cat.uuid, i.amount, i.type, i.description, i.date, i.is_shared, i.is_recurring, i.recurring_rule, i.tags, xfer.uuid, i.created_at, i.updated_at
+		FROM inserted i
+		JOIN users u ON u.id = i.user_id
+		JOIN accounts acc ON acc.id = i.account_id
+		JOIN categories cat ON cat.id = i.category_id
+		LEFT JOIN accounts xfer ON xfer.id = i.transfer_to_account_id
 	`
 
-	err = r.db.QueryRow(ctx, query,
+	t, err := scanTransaction(r.db.QueryRow(ctx, query,
 		userID, req.AccountID, req.CategoryID, req.Amount, req.Type, req.Description,
 		date, req.IsShared, req.IsRecurring, req.RecurringRule, req.Tags, req.TransferToAccountID,
-	).Scan(
-		&transaction.ID, &transaction.UserID, &transaction.AccountID, &transaction.CategoryID,
-		&transaction.Amount, &transaction.Type, &transaction.Description, &transaction.Date,
-		&transaction.IsShared, &transaction.IsRecurring, &transaction.RecurringRule,
-		&transaction.Tags, &transaction.TransferToAccountID, &transaction.CreatedAt, &transaction.UpdatedAt,
-	)
-
+	))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create transaction: %w", err)
 	}
 
-	return transaction, nil
+	return t, nil
 }
 
 func (r *TransactionRepository) FindByID(ctx context.Context, id string) (*model.Transaction, error) {
-	transaction := &model.Transaction{}
-	query := `
-		SELECT id, user_id, account_id, category_id, amount, type, description, date, is_shared, is_recurring, recurring_rule, tags, transfer_to_account_id, created_at, updated_at
-		FROM transactions
-		WHERE id = $1
-	`
+	query := `SELECT ` + txnSelectCols + txnJoins + ` WHERE t.uuid = $1`
 
-	err := r.db.QueryRow(ctx, query, id).Scan(
-		&transaction.ID, &transaction.UserID, &transaction.AccountID, &transaction.CategoryID,
-		&transaction.Amount, &transaction.Type, &transaction.Description, &transaction.Date,
-		&transaction.IsShared, &transaction.IsRecurring, &transaction.RecurringRule,
-		&transaction.Tags, &transaction.TransferToAccountID, &transaction.CreatedAt, &transaction.UpdatedAt,
-	)
-
+	t, err := scanTransaction(r.db.QueryRow(ctx, query, id))
 	if err == pgx.ErrNoRows {
 		return nil, fmt.Errorf("transaction not found")
 	}
@@ -71,57 +87,54 @@ func (r *TransactionRepository) FindByID(ctx context.Context, id string) (*model
 		return nil, fmt.Errorf("failed to find transaction: %w", err)
 	}
 
-	return transaction, nil
+	return t, nil
 }
 
 func (r *TransactionRepository) FindByUserID(ctx context.Context, userID string, filters *model.TransactionFilters) ([]*model.Transaction, error) {
-	query := `
-		SELECT id, user_id, account_id, category_id, amount, type, description, date, is_shared, is_recurring, recurring_rule, tags, transfer_to_account_id, created_at, updated_at
-		FROM transactions
-		WHERE user_id = $1
+	query := `SELECT ` + txnSelectCols + txnJoins + `
+		WHERE t.user_id = (SELECT id FROM users WHERE uuid = $1)
 	`
 
-	args := []interface{}{userID}
+	args := []any{userID}
 	argPos := 2
 
-	// Build dynamic filters
 	if filters.AccountID != "" {
-		query += fmt.Sprintf(" AND account_id = $%d", argPos)
+		query += fmt.Sprintf(" AND t.account_id = (SELECT id FROM accounts WHERE uuid = $%d)", argPos)
 		args = append(args, filters.AccountID)
 		argPos++
 	}
 
 	if filters.CategoryID != "" {
-		query += fmt.Sprintf(" AND category_id = $%d", argPos)
+		query += fmt.Sprintf(" AND t.category_id = (SELECT id FROM categories WHERE uuid = $%d)", argPos)
 		args = append(args, filters.CategoryID)
 		argPos++
 	}
 
 	if filters.Type != "" {
-		query += fmt.Sprintf(" AND type = $%d", argPos)
+		query += fmt.Sprintf(" AND t.type = $%d", argPos)
 		args = append(args, filters.Type)
 		argPos++
 	}
 
 	if filters.StartDate != "" {
-		query += fmt.Sprintf(" AND date >= $%d", argPos)
+		query += fmt.Sprintf(" AND t.date >= $%d", argPos)
 		args = append(args, filters.StartDate)
 		argPos++
 	}
 
 	if filters.EndDate != "" {
-		query += fmt.Sprintf(" AND date <= $%d", argPos)
+		query += fmt.Sprintf(" AND t.date <= $%d", argPos)
 		args = append(args, filters.EndDate)
 		argPos++
 	}
 
 	if filters.IsShared != nil {
-		query += fmt.Sprintf(" AND is_shared = $%d", argPos)
+		query += fmt.Sprintf(" AND t.is_shared = $%d", argPos)
 		args = append(args, *filters.IsShared)
 		argPos++
 	}
 
-	query += " ORDER BY date DESC, created_at DESC"
+	query += " ORDER BY t.date DESC, t.created_at DESC"
 
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
@@ -131,16 +144,11 @@ func (r *TransactionRepository) FindByUserID(ctx context.Context, userID string,
 
 	var transactions []*model.Transaction
 	for rows.Next() {
-		transaction := &model.Transaction{}
-		if err := rows.Scan(
-			&transaction.ID, &transaction.UserID, &transaction.AccountID, &transaction.CategoryID,
-			&transaction.Amount, &transaction.Type, &transaction.Description, &transaction.Date,
-			&transaction.IsShared, &transaction.IsRecurring, &transaction.RecurringRule,
-			&transaction.Tags, &transaction.TransferToAccountID, &transaction.CreatedAt, &transaction.UpdatedAt,
-		); err != nil {
+		t, err := scanTransaction(rows)
+		if err != nil {
 			return nil, fmt.Errorf("failed to scan transaction: %w", err)
 		}
-		transactions = append(transactions, transaction)
+		transactions = append(transactions, t)
 	}
 
 	return transactions, nil
@@ -148,52 +156,48 @@ func (r *TransactionRepository) FindByUserID(ctx context.Context, userID string,
 
 // FindAll returns all transactions with optional filters (for admin)
 func (r *TransactionRepository) FindAll(ctx context.Context, filters *model.TransactionFilters) ([]*model.Transaction, error) {
-	query := `
-		SELECT id, user_id, account_id, category_id, amount, type, description, date, is_shared, is_recurring, recurring_rule, tags, transfer_to_account_id, created_at, updated_at
-		FROM transactions
-		WHERE 1=1
-	`
+	query := `SELECT ` + txnSelectCols + txnJoins + ` WHERE 1=1`
 
 	args := []any{}
 	argPos := 1
 
 	if filters.AccountID != "" {
-		query += fmt.Sprintf(" AND account_id = $%d", argPos)
+		query += fmt.Sprintf(" AND t.account_id = (SELECT id FROM accounts WHERE uuid = $%d)", argPos)
 		args = append(args, filters.AccountID)
 		argPos++
 	}
 
 	if filters.CategoryID != "" {
-		query += fmt.Sprintf(" AND category_id = $%d", argPos)
+		query += fmt.Sprintf(" AND t.category_id = (SELECT id FROM categories WHERE uuid = $%d)", argPos)
 		args = append(args, filters.CategoryID)
 		argPos++
 	}
 
 	if filters.Type != "" {
-		query += fmt.Sprintf(" AND type = $%d", argPos)
+		query += fmt.Sprintf(" AND t.type = $%d", argPos)
 		args = append(args, filters.Type)
 		argPos++
 	}
 
 	if filters.StartDate != "" {
-		query += fmt.Sprintf(" AND date >= $%d", argPos)
+		query += fmt.Sprintf(" AND t.date >= $%d", argPos)
 		args = append(args, filters.StartDate)
 		argPos++
 	}
 
 	if filters.EndDate != "" {
-		query += fmt.Sprintf(" AND date <= $%d", argPos)
+		query += fmt.Sprintf(" AND t.date <= $%d", argPos)
 		args = append(args, filters.EndDate)
 		argPos++
 	}
 
 	if filters.IsShared != nil {
-		query += fmt.Sprintf(" AND is_shared = $%d", argPos)
+		query += fmt.Sprintf(" AND t.is_shared = $%d", argPos)
 		args = append(args, *filters.IsShared)
 		argPos++
 	}
 
-	query += " ORDER BY date DESC, created_at DESC"
+	query += " ORDER BY t.date DESC, t.created_at DESC"
 
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
@@ -203,16 +207,11 @@ func (r *TransactionRepository) FindAll(ctx context.Context, filters *model.Tran
 
 	var transactions []*model.Transaction
 	for rows.Next() {
-		transaction := &model.Transaction{}
-		if err := rows.Scan(
-			&transaction.ID, &transaction.UserID, &transaction.AccountID, &transaction.CategoryID,
-			&transaction.Amount, &transaction.Type, &transaction.Description, &transaction.Date,
-			&transaction.IsShared, &transaction.IsRecurring, &transaction.RecurringRule,
-			&transaction.Tags, &transaction.TransferToAccountID, &transaction.CreatedAt, &transaction.UpdatedAt,
-		); err != nil {
+		t, err := scanTransaction(rows)
+		if err != nil {
 			return nil, fmt.Errorf("failed to scan transaction: %w", err)
 		}
-		transactions = append(transactions, transaction)
+		transactions = append(transactions, t)
 	}
 
 	return transactions, nil
@@ -221,17 +220,17 @@ func (r *TransactionRepository) FindAll(ctx context.Context, filters *model.Tran
 func (r *TransactionRepository) Update(ctx context.Context, id string, req *model.UpdateTransactionRequest) (*model.Transaction, error) {
 	// Build dynamic update query
 	updates := []string{}
-	args := []interface{}{}
+	args := []any{}
 	argPos := 1
 
 	if req.AccountID != nil {
-		updates = append(updates, fmt.Sprintf("account_id = $%d", argPos))
+		updates = append(updates, fmt.Sprintf("account_id = (SELECT id FROM accounts WHERE uuid = $%d)", argPos))
 		args = append(args, *req.AccountID)
 		argPos++
 	}
 
 	if req.CategoryID != nil {
-		updates = append(updates, fmt.Sprintf("category_id = $%d", argPos))
+		updates = append(updates, fmt.Sprintf("category_id = (SELECT id FROM categories WHERE uuid = $%d)", argPos))
 		args = append(args, *req.CategoryID)
 		argPos++
 	}
@@ -278,20 +277,21 @@ func (r *TransactionRepository) Update(ctx context.Context, id string, req *mode
 
 	args = append(args, id)
 	query := fmt.Sprintf(`
-		UPDATE transactions
-		SET %s
-		WHERE id = $%d
-		RETURNING id, user_id, account_id, category_id, amount, type, description, date, is_shared, is_recurring, recurring_rule, tags, transfer_to_account_id, created_at, updated_at
+		WITH updated AS (
+			UPDATE transactions
+			SET %s
+			WHERE uuid = $%d
+			RETURNING *
+		)
+		SELECT up.uuid, u.uuid, acc.uuid, cat.uuid, up.amount, up.type, up.description, up.date, up.is_shared, up.is_recurring, up.recurring_rule, up.tags, xfer.uuid, up.created_at, up.updated_at
+		FROM updated up
+		JOIN users u ON u.id = up.user_id
+		JOIN accounts acc ON acc.id = up.account_id
+		JOIN categories cat ON cat.id = up.category_id
+		LEFT JOIN accounts xfer ON xfer.id = up.transfer_to_account_id
 	`, strings.Join(updates, ", "), argPos)
 
-	transaction := &model.Transaction{}
-	err := r.db.QueryRow(ctx, query, args...).Scan(
-		&transaction.ID, &transaction.UserID, &transaction.AccountID, &transaction.CategoryID,
-		&transaction.Amount, &transaction.Type, &transaction.Description, &transaction.Date,
-		&transaction.IsShared, &transaction.IsRecurring, &transaction.RecurringRule,
-		&transaction.Tags, &transaction.TransferToAccountID, &transaction.CreatedAt, &transaction.UpdatedAt,
-	)
-
+	t, err := scanTransaction(r.db.QueryRow(ctx, query, args...))
 	if err == pgx.ErrNoRows {
 		return nil, fmt.Errorf("transaction not found")
 	}
@@ -299,15 +299,13 @@ func (r *TransactionRepository) Update(ctx context.Context, id string, req *mode
 		return nil, fmt.Errorf("failed to update transaction: %w", err)
 	}
 
-	return transaction, nil
+	return t, nil
 }
 
 func (r *TransactionRepository) FindRecurring(ctx context.Context, userID string) ([]*model.Transaction, error) {
-	query := `
-		SELECT id, user_id, account_id, category_id, amount, type, description, date, is_shared, is_recurring, recurring_rule, tags, transfer_to_account_id, created_at, updated_at
-		FROM transactions
-		WHERE user_id = $1 AND is_recurring = true AND recurring_rule IS NOT NULL
-		ORDER BY date DESC
+	query := `SELECT ` + txnSelectCols + txnJoins + `
+		WHERE t.user_id = (SELECT id FROM users WHERE uuid = $1) AND t.is_recurring = true AND t.recurring_rule IS NOT NULL
+		ORDER BY t.date DESC
 	`
 
 	rows, err := r.db.Query(ctx, query, userID)
@@ -318,13 +316,8 @@ func (r *TransactionRepository) FindRecurring(ctx context.Context, userID string
 
 	var transactions []*model.Transaction
 	for rows.Next() {
-		t := &model.Transaction{}
-		if err := rows.Scan(
-			&t.ID, &t.UserID, &t.AccountID, &t.CategoryID,
-			&t.Amount, &t.Type, &t.Description, &t.Date,
-			&t.IsShared, &t.IsRecurring, &t.RecurringRule,
-			&t.Tags, &t.TransferToAccountID, &t.CreatedAt, &t.UpdatedAt,
-		); err != nil {
+		t, err := scanTransaction(rows)
+		if err != nil {
 			return nil, fmt.Errorf("failed to scan recurring transaction: %w", err)
 		}
 		transactions = append(transactions, t)
@@ -334,21 +327,16 @@ func (r *TransactionRepository) FindRecurring(ctx context.Context, userID string
 }
 
 func (r *TransactionRepository) FindLatestByTemplate(ctx context.Context, userID, accountID, categoryID, description string) (*model.Transaction, error) {
-	query := `
-		SELECT id, user_id, account_id, category_id, amount, type, description, date, is_shared, is_recurring, recurring_rule, tags, transfer_to_account_id, created_at, updated_at
-		FROM transactions
-		WHERE user_id = $1 AND account_id = $2 AND category_id = $3 AND description = $4 AND is_recurring = false
-		ORDER BY date DESC
+	query := `SELECT ` + txnSelectCols + txnJoins + `
+		WHERE t.user_id = (SELECT id FROM users WHERE uuid = $1)
+			AND t.account_id = (SELECT id FROM accounts WHERE uuid = $2)
+			AND t.category_id = (SELECT id FROM categories WHERE uuid = $3)
+			AND t.description = $4 AND t.is_recurring = false
+		ORDER BY t.date DESC
 		LIMIT 1
 	`
 
-	t := &model.Transaction{}
-	err := r.db.QueryRow(ctx, query, userID, accountID, categoryID, description).Scan(
-		&t.ID, &t.UserID, &t.AccountID, &t.CategoryID,
-		&t.Amount, &t.Type, &t.Description, &t.Date,
-		&t.IsShared, &t.IsRecurring, &t.RecurringRule,
-		&t.Tags, &t.TransferToAccountID, &t.CreatedAt, &t.UpdatedAt,
-	)
+	t, err := scanTransaction(r.db.QueryRow(ctx, query, userID, accountID, categoryID, description))
 	if err == pgx.ErrNoRows {
 		return nil, nil
 	}
@@ -360,7 +348,7 @@ func (r *TransactionRepository) FindLatestByTemplate(ctx context.Context, userID
 }
 
 func (r *TransactionRepository) Delete(ctx context.Context, id string) error {
-	query := `DELETE FROM transactions WHERE id = $1`
+	query := `DELETE FROM transactions WHERE uuid = $1`
 	result, err := r.db.Exec(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete transaction: %w", err)

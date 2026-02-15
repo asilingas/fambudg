@@ -39,7 +39,7 @@ func (r *UserRepository) createUser(ctx context.Context, email, password, name, 
 	query := `
 		INSERT INTO users (email, password_hash, name, role)
 		VALUES ($1, $2, $3, $4)
-		RETURNING id, email, name, role, created_at, updated_at
+		RETURNING uuid, email, name, role, created_at, updated_at
 	`
 
 	err = r.db.QueryRow(ctx, query, email, string(hashedPassword), name, role).
@@ -55,7 +55,7 @@ func (r *UserRepository) createUser(ctx context.Context, email, password, name, 
 // ListAll returns all users
 func (r *UserRepository) ListAll(ctx context.Context) ([]*model.User, error) {
 	query := `
-		SELECT id, email, name, role, created_at, updated_at
+		SELECT uuid, email, name, role, created_at, updated_at
 		FROM users
 		ORDER BY created_at ASC
 	`
@@ -106,8 +106,8 @@ func (r *UserRepository) Update(ctx context.Context, id string, req *model.Updat
 	query := fmt.Sprintf(`
 		UPDATE users
 		SET %s
-		WHERE id = $%d
-		RETURNING id, email, name, role, created_at, updated_at
+		WHERE uuid = $%d
+		RETURNING uuid, email, name, role, created_at, updated_at
 	`, strings.Join(updates, ", "), argPos)
 
 	user := &model.User{}
@@ -126,7 +126,7 @@ func (r *UserRepository) Update(ctx context.Context, id string, req *model.Updat
 
 // Delete deletes a user by ID
 func (r *UserRepository) Delete(ctx context.Context, id string) error {
-	query := `DELETE FROM users WHERE id = $1`
+	query := `DELETE FROM users WHERE uuid = $1`
 	result, err := r.db.Exec(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete user: %w", err)
@@ -143,7 +143,7 @@ func (r *UserRepository) Delete(ctx context.Context, id string) error {
 func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*model.User, error) {
 	user := &model.User{}
 	query := `
-		SELECT id, email, password_hash, name, role, created_at, updated_at
+		SELECT uuid, email, password_hash, name, role, created_at, updated_at
 		FROM users
 		WHERE email = $1
 	`
@@ -165,9 +165,9 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*model.
 func (r *UserRepository) FindByID(ctx context.Context, id string) (*model.User, error) {
 	user := &model.User{}
 	query := `
-		SELECT id, email, name, role, created_at, updated_at
+		SELECT uuid, email, name, role, created_at, updated_at
 		FROM users
-		WHERE id = $1
+		WHERE uuid = $1
 	`
 
 	err := r.db.QueryRow(ctx, query, id).

@@ -34,7 +34,7 @@ func (r *SavingGoalRepository) Create(ctx context.Context, req *model.CreateSavi
 	query := `
 		INSERT INTO saving_goals (name, target_amount, target_date, priority)
 		VALUES ($1, $2, $3, $4)
-		RETURNING id, name, target_amount, current_amount, target_date, priority, status, created_at, updated_at
+		RETURNING uuid, name, target_amount, current_amount, target_date, priority, status, created_at, updated_at
 	`
 
 	err := r.db.QueryRow(ctx, query,
@@ -53,9 +53,9 @@ func (r *SavingGoalRepository) Create(ctx context.Context, req *model.CreateSavi
 func (r *SavingGoalRepository) FindByID(ctx context.Context, id string) (*model.SavingGoal, error) {
 	goal := &model.SavingGoal{}
 	query := `
-		SELECT id, name, target_amount, current_amount, target_date, priority, status, created_at, updated_at
+		SELECT uuid, name, target_amount, current_amount, target_date, priority, status, created_at, updated_at
 		FROM saving_goals
-		WHERE id = $1
+		WHERE uuid = $1
 	`
 
 	err := r.db.QueryRow(ctx, query, id).Scan(
@@ -74,7 +74,7 @@ func (r *SavingGoalRepository) FindByID(ctx context.Context, id string) (*model.
 
 func (r *SavingGoalRepository) FindAll(ctx context.Context) ([]*model.SavingGoal, error) {
 	query := `
-		SELECT id, name, target_amount, current_amount, target_date, priority, status, created_at, updated_at
+		SELECT uuid, name, target_amount, current_amount, target_date, priority, status, created_at, updated_at
 		FROM saving_goals
 		ORDER BY priority, name
 	`
@@ -149,8 +149,8 @@ func (r *SavingGoalRepository) Update(ctx context.Context, id string, req *model
 	query := fmt.Sprintf(`
 		UPDATE saving_goals
 		SET %s
-		WHERE id = $%d
-		RETURNING id, name, target_amount, current_amount, target_date, priority, status, created_at, updated_at
+		WHERE uuid = $%d
+		RETURNING uuid, name, target_amount, current_amount, target_date, priority, status, created_at, updated_at
 	`, strings.Join(updates, ", "), argPos)
 
 	goal := &model.SavingGoal{}
@@ -173,8 +173,8 @@ func (r *SavingGoalRepository) Contribute(ctx context.Context, id string, amount
 	query := `
 		UPDATE saving_goals
 		SET current_amount = current_amount + $1, updated_at = NOW()
-		WHERE id = $2
-		RETURNING id, name, target_amount, current_amount, target_date, priority, status, created_at, updated_at
+		WHERE uuid = $2
+		RETURNING uuid, name, target_amount, current_amount, target_date, priority, status, created_at, updated_at
 	`
 
 	err := r.db.QueryRow(ctx, query, amount, id).Scan(

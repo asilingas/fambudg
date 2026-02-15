@@ -27,7 +27,7 @@ func (r *ReportRepository) GetMonthSummary(ctx context.Context, userID string, m
 			COALESCE(SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END), 0) AS total_income,
 			COALESCE(SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END), 0) AS total_expense
 		FROM transactions
-		WHERE user_id = $1
+		WHERE user_id = (SELECT id FROM users WHERE uuid = $1)
 			AND EXTRACT(MONTH FROM date) = $2
 			AND EXTRACT(YEAR FROM date) = $3
 	`
@@ -44,11 +44,9 @@ func (r *ReportRepository) GetMonthSummary(ctx context.Context, userID string, m
 }
 
 func (r *ReportRepository) GetRecentTransactions(ctx context.Context, userID string, limit int) ([]*model.Transaction, error) {
-	query := `
-		SELECT id, user_id, account_id, category_id, amount, type, description, date, is_shared, is_recurring, recurring_rule, tags, transfer_to_account_id, created_at, updated_at
-		FROM transactions
-		WHERE user_id = $1
-		ORDER BY date DESC, created_at DESC
+	query := `SELECT ` + txnSelectCols + txnJoins + `
+		WHERE t.user_id = (SELECT id FROM users WHERE uuid = $1)
+		ORDER BY t.date DESC, t.created_at DESC
 		LIMIT $2
 	`
 
@@ -60,13 +58,8 @@ func (r *ReportRepository) GetRecentTransactions(ctx context.Context, userID str
 
 	var transactions []*model.Transaction
 	for rows.Next() {
-		t := &model.Transaction{}
-		if err := rows.Scan(
-			&t.ID, &t.UserID, &t.AccountID, &t.CategoryID,
-			&t.Amount, &t.Type, &t.Description, &t.Date,
-			&t.IsShared, &t.IsRecurring, &t.RecurringRule,
-			&t.Tags, &t.TransferToAccountID, &t.CreatedAt, &t.UpdatedAt,
-		); err != nil {
+		t, err := scanTransaction(rows)
+		if err != nil {
 			return nil, fmt.Errorf("failed to scan transaction: %w", err)
 		}
 		transactions = append(transactions, t)
@@ -104,10 +97,8 @@ func (r *ReportRepository) GetMonthSummaryAll(ctx context.Context, month, year i
 
 // GetRecentTransactionsAll returns recent transactions for all users (admin)
 func (r *ReportRepository) GetRecentTransactionsAll(ctx context.Context, limit int) ([]*model.Transaction, error) {
-	query := `
-		SELECT id, user_id, account_id, category_id, amount, type, description, date, is_shared, is_recurring, recurring_rule, tags, transfer_to_account_id, created_at, updated_at
-		FROM transactions
-		ORDER BY date DESC, created_at DESC
+	query := `SELECT ` + txnSelectCols + txnJoins + `
+		ORDER BY t.date DESC, t.created_at DESC
 		LIMIT $1
 	`
 
@@ -119,13 +110,8 @@ func (r *ReportRepository) GetRecentTransactionsAll(ctx context.Context, limit i
 
 	var transactions []*model.Transaction
 	for rows.Next() {
-		t := &model.Transaction{}
-		if err := rows.Scan(
-			&t.ID, &t.UserID, &t.AccountID, &t.CategoryID,
-			&t.Amount, &t.Type, &t.Description, &t.Date,
-			&t.IsShared, &t.IsRecurring, &t.RecurringRule,
-			&t.Tags, &t.TransferToAccountID, &t.CreatedAt, &t.UpdatedAt,
-		); err != nil {
+		t, err := scanTransaction(rows)
+		if err != nil {
 			return nil, fmt.Errorf("failed to scan transaction: %w", err)
 		}
 		transactions = append(transactions, t)
@@ -138,7 +124,7 @@ func (r *ReportRepository) GetRecentTransactionsAll(ctx context.Context, limit i
 func (r *ReportRepository) GetSpendingByCategoryAll(ctx context.Context, month, year int) ([]*model.CategorySpending, error) {
 	query := `
 		SELECT
-			t.category_id,
+			c.uuid,
 			c.name AS category_name,
 			COALESCE(SUM(ABS(t.amount)), 0) AS total_amount
 		FROM transactions t
@@ -146,7 +132,7 @@ func (r *ReportRepository) GetSpendingByCategoryAll(ctx context.Context, month, 
 		WHERE t.amount < 0
 			AND EXTRACT(MONTH FROM t.date) = $1
 			AND EXTRACT(YEAR FROM t.date) = $2
-		GROUP BY t.category_id, c.name
+		GROUP BY c.uuid, c.name
 		ORDER BY total_amount DESC
 	`
 
@@ -211,64 +197,60 @@ func (r *ReportRepository) GetTrendsAll(ctx context.Context, months int) ([]*mod
 
 // SearchTransactionsAll searches all transactions without user filter (admin)
 func (r *ReportRepository) SearchTransactionsAll(ctx context.Context, filters *model.SearchFilters) (*model.SearchResult, error) {
-	query := `
-		SELECT id, user_id, account_id, category_id, amount, type, description, date, is_shared, is_recurring, recurring_rule, tags, transfer_to_account_id, created_at, updated_at
-		FROM transactions
-		WHERE 1=1
-	`
+	query := `SELECT ` + txnSelectCols + txnJoins + ` WHERE 1=1`
 
 	args := []any{}
 	argPos := 1
 
 	if filters.Description != "" {
-		query += fmt.Sprintf(" AND description ILIKE $%d", argPos)
+		query += fmt.Sprintf(" AND t.description ILIKE $%d", argPos)
 		args = append(args, "%"+filters.Description+"%")
 		argPos++
 	}
 
 	if filters.MinAmount != nil {
-		query += fmt.Sprintf(" AND ABS(amount) >= $%d", argPos)
+		query += fmt.Sprintf(" AND ABS(t.amount) >= $%d", argPos)
 		args = append(args, *filters.MinAmount)
 		argPos++
 	}
 
 	if filters.MaxAmount != nil {
-		query += fmt.Sprintf(" AND ABS(amount) <= $%d", argPos)
+		query += fmt.Sprintf(" AND ABS(t.amount) <= $%d", argPos)
 		args = append(args, *filters.MaxAmount)
 		argPos++
 	}
 
 	if filters.StartDate != "" {
-		query += fmt.Sprintf(" AND date >= $%d", argPos)
+		query += fmt.Sprintf(" AND t.date >= $%d", argPos)
 		args = append(args, filters.StartDate)
 		argPos++
 	}
 
 	if filters.EndDate != "" {
-		query += fmt.Sprintf(" AND date <= $%d", argPos)
+		query += fmt.Sprintf(" AND t.date <= $%d", argPos)
 		args = append(args, filters.EndDate)
 		argPos++
 	}
 
 	if filters.CategoryID != "" {
-		query += fmt.Sprintf(" AND category_id = $%d", argPos)
+		query += fmt.Sprintf(" AND t.category_id = (SELECT id FROM categories WHERE uuid = $%d)", argPos)
 		args = append(args, filters.CategoryID)
 		argPos++
 	}
 
 	if filters.AccountID != "" {
-		query += fmt.Sprintf(" AND account_id = $%d", argPos)
+		query += fmt.Sprintf(" AND t.account_id = (SELECT id FROM accounts WHERE uuid = $%d)", argPos)
 		args = append(args, filters.AccountID)
 		argPos++
 	}
 
 	if len(filters.Tags) > 0 {
-		query += fmt.Sprintf(" AND tags && $%d", argPos)
+		query += fmt.Sprintf(" AND t.tags && $%d", argPos)
 		args = append(args, filters.Tags)
 		argPos++
 	}
 
-	query += " ORDER BY date DESC, created_at DESC LIMIT 100"
+	query += " ORDER BY t.date DESC, t.created_at DESC LIMIT 100"
 
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
@@ -278,13 +260,8 @@ func (r *ReportRepository) SearchTransactionsAll(ctx context.Context, filters *m
 
 	var transactions []*model.Transaction
 	for rows.Next() {
-		t := &model.Transaction{}
-		if err := rows.Scan(
-			&t.ID, &t.UserID, &t.AccountID, &t.CategoryID,
-			&t.Amount, &t.Type, &t.Description, &t.Date,
-			&t.IsShared, &t.IsRecurring, &t.RecurringRule,
-			&t.Tags, &t.TransferToAccountID, &t.CreatedAt, &t.UpdatedAt,
-		); err != nil {
+		t, err := scanTransaction(rows)
+		if err != nil {
 			return nil, fmt.Errorf("failed to scan transaction: %w", err)
 		}
 		transactions = append(transactions, t)
@@ -299,16 +276,16 @@ func (r *ReportRepository) SearchTransactionsAll(ctx context.Context, filters *m
 func (r *ReportRepository) GetSpendingByCategory(ctx context.Context, userID string, month, year int) ([]*model.CategorySpending, error) {
 	query := `
 		SELECT
-			t.category_id,
+			c.uuid,
 			c.name AS category_name,
 			COALESCE(SUM(ABS(t.amount)), 0) AS total_amount
 		FROM transactions t
 		JOIN categories c ON c.id = t.category_id
-		WHERE t.user_id = $1
+		WHERE t.user_id = (SELECT id FROM users WHERE uuid = $1)
 			AND t.amount < 0
 			AND EXTRACT(MONTH FROM t.date) = $2
 			AND EXTRACT(YEAR FROM t.date) = $3
-		GROUP BY t.category_id, c.name
+		GROUP BY c.uuid, c.name
 		ORDER BY total_amount DESC
 	`
 
@@ -342,7 +319,7 @@ func (r *ReportRepository) GetSpendingByCategory(ctx context.Context, userID str
 func (r *ReportRepository) GetSpendingByMember(ctx context.Context, month, year int) ([]*model.MemberSpending, error) {
 	query := `
 		SELECT
-			t.user_id,
+			u.uuid,
 			u.name AS user_name,
 			COALESCE(SUM(CASE WHEN t.amount < 0 THEN ABS(t.amount) ELSE 0 END), 0) AS total_expense,
 			COALESCE(SUM(CASE WHEN t.amount > 0 THEN t.amount ELSE 0 END), 0) AS total_income
@@ -350,7 +327,7 @@ func (r *ReportRepository) GetSpendingByMember(ctx context.Context, month, year 
 		JOIN users u ON u.id = t.user_id
 		WHERE EXTRACT(MONTH FROM t.date) = $1
 			AND EXTRACT(YEAR FROM t.date) = $2
-		GROUP BY t.user_id, u.name
+		GROUP BY u.uuid, u.name
 		ORDER BY total_expense DESC
 	`
 
@@ -374,64 +351,62 @@ func (r *ReportRepository) GetSpendingByMember(ctx context.Context, month, year 
 }
 
 func (r *ReportRepository) SearchTransactions(ctx context.Context, filters *model.SearchFilters) (*model.SearchResult, error) {
-	query := `
-		SELECT id, user_id, account_id, category_id, amount, type, description, date, is_shared, is_recurring, recurring_rule, tags, transfer_to_account_id, created_at, updated_at
-		FROM transactions
-		WHERE user_id = $1
+	query := `SELECT ` + txnSelectCols + txnJoins + `
+		WHERE t.user_id = (SELECT id FROM users WHERE uuid = $1)
 	`
 
 	args := []any{filters.UserID}
 	argPos := 2
 
 	if filters.Description != "" {
-		query += fmt.Sprintf(" AND description ILIKE $%d", argPos)
+		query += fmt.Sprintf(" AND t.description ILIKE $%d", argPos)
 		args = append(args, "%"+filters.Description+"%")
 		argPos++
 	}
 
 	if filters.MinAmount != nil {
-		query += fmt.Sprintf(" AND ABS(amount) >= $%d", argPos)
+		query += fmt.Sprintf(" AND ABS(t.amount) >= $%d", argPos)
 		args = append(args, *filters.MinAmount)
 		argPos++
 	}
 
 	if filters.MaxAmount != nil {
-		query += fmt.Sprintf(" AND ABS(amount) <= $%d", argPos)
+		query += fmt.Sprintf(" AND ABS(t.amount) <= $%d", argPos)
 		args = append(args, *filters.MaxAmount)
 		argPos++
 	}
 
 	if filters.StartDate != "" {
-		query += fmt.Sprintf(" AND date >= $%d", argPos)
+		query += fmt.Sprintf(" AND t.date >= $%d", argPos)
 		args = append(args, filters.StartDate)
 		argPos++
 	}
 
 	if filters.EndDate != "" {
-		query += fmt.Sprintf(" AND date <= $%d", argPos)
+		query += fmt.Sprintf(" AND t.date <= $%d", argPos)
 		args = append(args, filters.EndDate)
 		argPos++
 	}
 
 	if filters.CategoryID != "" {
-		query += fmt.Sprintf(" AND category_id = $%d", argPos)
+		query += fmt.Sprintf(" AND t.category_id = (SELECT id FROM categories WHERE uuid = $%d)", argPos)
 		args = append(args, filters.CategoryID)
 		argPos++
 	}
 
 	if filters.AccountID != "" {
-		query += fmt.Sprintf(" AND account_id = $%d", argPos)
+		query += fmt.Sprintf(" AND t.account_id = (SELECT id FROM accounts WHERE uuid = $%d)", argPos)
 		args = append(args, filters.AccountID)
 		argPos++
 	}
 
 	if len(filters.Tags) > 0 {
-		query += fmt.Sprintf(" AND tags && $%d", argPos)
+		query += fmt.Sprintf(" AND t.tags && $%d", argPos)
 		args = append(args, filters.Tags)
 		argPos++
 	}
 
-	query += " ORDER BY date DESC, created_at DESC LIMIT 100"
+	query += " ORDER BY t.date DESC, t.created_at DESC LIMIT 100"
 
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
@@ -441,13 +416,8 @@ func (r *ReportRepository) SearchTransactions(ctx context.Context, filters *mode
 
 	var transactions []*model.Transaction
 	for rows.Next() {
-		t := &model.Transaction{}
-		if err := rows.Scan(
-			&t.ID, &t.UserID, &t.AccountID, &t.CategoryID,
-			&t.Amount, &t.Type, &t.Description, &t.Date,
-			&t.IsShared, &t.IsRecurring, &t.RecurringRule,
-			&t.Tags, &t.TransferToAccountID, &t.CreatedAt, &t.UpdatedAt,
-		); err != nil {
+		t, err := scanTransaction(rows)
+		if err != nil {
 			return nil, fmt.Errorf("failed to scan transaction: %w", err)
 		}
 		transactions = append(transactions, t)
@@ -467,7 +437,7 @@ func (r *ReportRepository) GetTrends(ctx context.Context, userID string, months 
 			COALESCE(SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END), 0) AS total_income,
 			COALESCE(SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END), 0) AS total_expense
 		FROM transactions
-		WHERE user_id = $1
+		WHERE user_id = (SELECT id FROM users WHERE uuid = $1)
 			AND date >= (CURRENT_DATE - make_interval(months => $2))
 		GROUP BY EXTRACT(YEAR FROM date), EXTRACT(MONTH FROM date)
 		ORDER BY year, month

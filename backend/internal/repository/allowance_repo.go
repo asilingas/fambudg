@@ -27,9 +27,13 @@ func (r *AllowanceRepository) Create(ctx context.Context, req *model.CreateAllow
 
 	allowance := &model.Allowance{}
 	query := `
-		INSERT INTO allowances (user_id, amount, period_start)
-		VALUES ($1, $2, $3)
-		RETURNING id, user_id, amount, period_start, created_at, updated_at
+		WITH inserted AS (
+			INSERT INTO allowances (user_id, amount, period_start)
+			VALUES ((SELECT id FROM users WHERE uuid = $1), $2, $3)
+			RETURNING *
+		)
+		SELECT i.uuid, u.uuid, i.amount, i.period_start, i.created_at, i.updated_at
+		FROM inserted i JOIN users u ON u.id = i.user_id
 	`
 
 	err = r.db.QueryRow(ctx, query, req.UserID, req.Amount, periodStart).
@@ -45,9 +49,9 @@ func (r *AllowanceRepository) Create(ctx context.Context, req *model.CreateAllow
 func (r *AllowanceRepository) FindByID(ctx context.Context, id string) (*model.Allowance, error) {
 	allowance := &model.Allowance{}
 	query := `
-		SELECT id, user_id, amount, period_start, created_at, updated_at
-		FROM allowances
-		WHERE id = $1
+		SELECT a.uuid, u.uuid, a.amount, a.period_start, a.created_at, a.updated_at
+		FROM allowances a JOIN users u ON u.id = a.user_id
+		WHERE a.uuid = $1
 	`
 
 	err := r.db.QueryRow(ctx, query, id).
@@ -66,9 +70,9 @@ func (r *AllowanceRepository) FindByID(ctx context.Context, id string) (*model.A
 func (r *AllowanceRepository) FindByUserID(ctx context.Context, userID string) (*model.Allowance, error) {
 	allowance := &model.Allowance{}
 	query := `
-		SELECT id, user_id, amount, period_start, created_at, updated_at
-		FROM allowances
-		WHERE user_id = $1
+		SELECT a.uuid, u.uuid, a.amount, a.period_start, a.created_at, a.updated_at
+		FROM allowances a JOIN users u ON u.id = a.user_id
+		WHERE a.user_id = (SELECT id FROM users WHERE uuid = $1)
 	`
 
 	err := r.db.QueryRow(ctx, query, userID).
@@ -86,9 +90,9 @@ func (r *AllowanceRepository) FindByUserID(ctx context.Context, userID string) (
 
 func (r *AllowanceRepository) ListAll(ctx context.Context) ([]*model.Allowance, error) {
 	query := `
-		SELECT id, user_id, amount, period_start, created_at, updated_at
-		FROM allowances
-		ORDER BY created_at ASC
+		SELECT a.uuid, u.uuid, a.amount, a.period_start, a.created_at, a.updated_at
+		FROM allowances a JOIN users u ON u.id = a.user_id
+		ORDER BY a.created_at ASC
 	`
 
 	rows, err := r.db.Query(ctx, query)
@@ -138,10 +142,14 @@ func (r *AllowanceRepository) Update(ctx context.Context, id string, req *model.
 
 	args = append(args, id)
 	query := fmt.Sprintf(`
-		UPDATE allowances
-		SET %s
-		WHERE id = $%d
-		RETURNING id, user_id, amount, period_start, created_at, updated_at
+		WITH updated AS (
+			UPDATE allowances
+			SET %s
+			WHERE uuid = $%d
+			RETURNING *
+		)
+		SELECT up.uuid, u.uuid, up.amount, up.period_start, up.created_at, up.updated_at
+		FROM updated up JOIN users u ON u.id = up.user_id
 	`, strings.Join(updates, ", "), argPos)
 
 	allowance := &model.Allowance{}
@@ -166,7 +174,7 @@ func (r *AllowanceRepository) GetSpentInPeriod(ctx context.Context, userID strin
 	query := `
 		SELECT COALESCE(SUM(ABS(amount)), 0)
 		FROM transactions
-		WHERE user_id = $1
+		WHERE user_id = (SELECT id FROM users WHERE uuid = $1)
 			AND amount < 0
 			AND date >= $2
 			AND date < $3

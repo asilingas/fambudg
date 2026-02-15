@@ -20,9 +20,13 @@ func NewCategoryRepository(db *pgxpool.Pool) *CategoryRepository {
 func (r *CategoryRepository) Create(ctx context.Context, req *model.CreateCategoryRequest) (*model.Category, error) {
 	category := &model.Category{}
 	query := `
-		INSERT INTO categories (parent_id, name, type, icon, sort_order)
-		VALUES ($1, $2, $3, $4, $5)
-		RETURNING id, parent_id, name, type, icon, sort_order
+		WITH inserted AS (
+			INSERT INTO categories (parent_id, name, type, icon, sort_order)
+			VALUES ((SELECT id FROM categories WHERE uuid = $1), $2, $3, $4, $5)
+			RETURNING *
+		)
+		SELECT i.uuid, p.uuid, i.name, i.type, i.icon, i.sort_order
+		FROM inserted i LEFT JOIN categories p ON p.id = i.parent_id
 	`
 
 	err := r.db.QueryRow(ctx, query, req.ParentID, req.Name, req.Type, req.Icon, req.SortOrder).
@@ -37,9 +41,9 @@ func (r *CategoryRepository) Create(ctx context.Context, req *model.CreateCatego
 
 func (r *CategoryRepository) FindAll(ctx context.Context) ([]*model.Category, error) {
 	query := `
-		SELECT id, parent_id, name, type, icon, sort_order
-		FROM categories
-		ORDER BY sort_order, name
+		SELECT c.uuid, p.uuid, c.name, c.type, c.icon, c.sort_order
+		FROM categories c LEFT JOIN categories p ON p.id = c.parent_id
+		ORDER BY c.sort_order, c.name
 	`
 
 	rows, err := r.db.Query(ctx, query)
@@ -63,9 +67,9 @@ func (r *CategoryRepository) FindAll(ctx context.Context) ([]*model.Category, er
 func (r *CategoryRepository) FindByID(ctx context.Context, id string) (*model.Category, error) {
 	category := &model.Category{}
 	query := `
-		SELECT id, parent_id, name, type, icon, sort_order
-		FROM categories
-		WHERE id = $1
+		SELECT c.uuid, p.uuid, c.name, c.type, c.icon, c.sort_order
+		FROM categories c LEFT JOIN categories p ON p.id = c.parent_id
+		WHERE c.uuid = $1
 	`
 
 	err := r.db.QueryRow(ctx, query, id).
@@ -84,12 +88,16 @@ func (r *CategoryRepository) FindByID(ctx context.Context, id string) (*model.Ca
 func (r *CategoryRepository) Update(ctx context.Context, id string, req *model.UpdateCategoryRequest) (*model.Category, error) {
 	category := &model.Category{}
 	query := `
-		UPDATE categories
-		SET name = COALESCE(NULLIF($1, ''), name),
-		    icon = COALESCE(NULLIF($2, ''), icon),
-		    sort_order = COALESCE($3, sort_order)
-		WHERE id = $4
-		RETURNING id, parent_id, name, type, icon, sort_order
+		WITH updated AS (
+			UPDATE categories
+			SET name = COALESCE(NULLIF($1, ''), name),
+			    icon = COALESCE(NULLIF($2, ''), icon),
+			    sort_order = COALESCE($3, sort_order)
+			WHERE uuid = $4
+			RETURNING *
+		)
+		SELECT up.uuid, p.uuid, up.name, up.type, up.icon, up.sort_order
+		FROM updated up LEFT JOIN categories p ON p.id = up.parent_id
 	`
 
 	err := r.db.QueryRow(ctx, query, req.Name, req.Icon, req.SortOrder, id).
@@ -106,7 +114,7 @@ func (r *CategoryRepository) Update(ctx context.Context, id string, req *model.U
 }
 
 func (r *CategoryRepository) Delete(ctx context.Context, id string) error {
-	query := `DELETE FROM categories WHERE id = $1`
+	query := `DELETE FROM categories WHERE uuid = $1`
 	result, err := r.db.Exec(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete category: %w", err)

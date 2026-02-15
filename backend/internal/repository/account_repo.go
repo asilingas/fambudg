@@ -21,9 +21,13 @@ func NewAccountRepository(db *pgxpool.Pool) *AccountRepository {
 func (r *AccountRepository) Create(ctx context.Context, userID string, req *model.CreateAccountRequest) (*model.Account, error) {
 	account := &model.Account{}
 	query := `
-		INSERT INTO accounts (user_id, name, type, currency, balance)
-		VALUES ($1, $2, $3, $4, $5)
-		RETURNING id, user_id, name, type, currency, balance, created_at
+		WITH inserted AS (
+			INSERT INTO accounts (user_id, name, type, currency, balance)
+			VALUES ((SELECT id FROM users WHERE uuid = $1), $2, $3, $4, $5)
+			RETURNING *
+		)
+		SELECT i.uuid, u.uuid, i.name, i.type, i.currency, i.balance, i.created_at
+		FROM inserted i JOIN users u ON u.id = i.user_id
 	`
 
 	err := r.db.QueryRow(ctx, query, userID, req.Name, req.Type, req.Currency, req.Balance).
@@ -40,9 +44,9 @@ func (r *AccountRepository) Create(ctx context.Context, userID string, req *mode
 func (r *AccountRepository) FindByID(ctx context.Context, id string) (*model.Account, error) {
 	account := &model.Account{}
 	query := `
-		SELECT id, user_id, name, type, currency, balance, created_at
-		FROM accounts
-		WHERE id = $1
+		SELECT a.uuid, u.uuid, a.name, a.type, a.currency, a.balance, a.created_at
+		FROM accounts a JOIN users u ON u.id = a.user_id
+		WHERE a.uuid = $1
 	`
 
 	err := r.db.QueryRow(ctx, query, id).
@@ -61,10 +65,10 @@ func (r *AccountRepository) FindByID(ctx context.Context, id string) (*model.Acc
 // FindByUserID finds all accounts for a user
 func (r *AccountRepository) FindByUserID(ctx context.Context, userID string) ([]*model.Account, error) {
 	query := `
-		SELECT id, user_id, name, type, currency, balance, created_at
-		FROM accounts
-		WHERE user_id = $1
-		ORDER BY created_at DESC
+		SELECT a.uuid, u.uuid, a.name, a.type, a.currency, a.balance, a.created_at
+		FROM accounts a JOIN users u ON u.id = a.user_id
+		WHERE a.user_id = (SELECT id FROM users WHERE uuid = $1)
+		ORDER BY a.created_at DESC
 	`
 
 	rows, err := r.db.Query(ctx, query, userID)
@@ -88,9 +92,9 @@ func (r *AccountRepository) FindByUserID(ctx context.Context, userID string) ([]
 // FindAll returns all accounts (for admin)
 func (r *AccountRepository) FindAll(ctx context.Context) ([]*model.Account, error) {
 	query := `
-		SELECT id, user_id, name, type, currency, balance, created_at
-		FROM accounts
-		ORDER BY created_at DESC
+		SELECT a.uuid, u.uuid, a.name, a.type, a.currency, a.balance, a.created_at
+		FROM accounts a JOIN users u ON u.id = a.user_id
+		ORDER BY a.created_at DESC
 	`
 
 	rows, err := r.db.Query(ctx, query)
@@ -114,12 +118,16 @@ func (r *AccountRepository) FindAll(ctx context.Context) ([]*model.Account, erro
 // Update updates an account
 func (r *AccountRepository) Update(ctx context.Context, id string, req *model.UpdateAccountRequest) (*model.Account, error) {
 	query := `
-		UPDATE accounts
-		SET name = COALESCE(NULLIF($1, ''), name),
-		    type = COALESCE(NULLIF($2, ''), type),
-		    currency = COALESCE(NULLIF($3, ''), currency)
-		WHERE id = $4
-		RETURNING id, user_id, name, type, currency, balance, created_at
+		WITH updated AS (
+			UPDATE accounts
+			SET name = COALESCE(NULLIF($1, ''), name),
+			    type = COALESCE(NULLIF($2, ''), type),
+			    currency = COALESCE(NULLIF($3, ''), currency)
+			WHERE uuid = $4
+			RETURNING *
+		)
+		SELECT up.uuid, u.uuid, up.name, up.type, up.currency, up.balance, up.created_at
+		FROM updated up JOIN users u ON u.id = up.user_id
 	`
 
 	account := &model.Account{}
@@ -138,7 +146,7 @@ func (r *AccountRepository) Update(ctx context.Context, id string, req *model.Up
 
 // Delete deletes an account
 func (r *AccountRepository) Delete(ctx context.Context, id string) error {
-	query := `DELETE FROM accounts WHERE id = $1`
+	query := `DELETE FROM accounts WHERE uuid = $1`
 	result, err := r.db.Exec(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete account: %w", err)
@@ -156,7 +164,7 @@ func (r *AccountRepository) UpdateBalance(ctx context.Context, accountID string,
 	query := `
 		UPDATE accounts
 		SET balance = balance + $1
-		WHERE id = $2
+		WHERE uuid = $2
 	`
 
 	result, err := r.db.Exec(ctx, query, amount, accountID)

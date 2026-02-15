@@ -1,6 +1,7 @@
 -- +goose Up
 CREATE TABLE saving_goals (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id BIGSERIAL PRIMARY KEY,
+    uuid UUID UNIQUE NOT NULL DEFAULT gen_random_uuid(),
     name VARCHAR(200) NOT NULL,
     target_amount BIGINT NOT NULL,
     current_amount BIGINT NOT NULL DEFAULT 0,
@@ -11,6 +12,7 @@ CREATE TABLE saving_goals (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE INDEX idx_saving_goals_uuid ON saving_goals(uuid);
 CREATE INDEX idx_saving_goals_status ON saving_goals(status);
 CREATE INDEX idx_saving_goals_priority ON saving_goals(priority);
 

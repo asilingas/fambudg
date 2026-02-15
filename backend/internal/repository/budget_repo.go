@@ -20,9 +20,13 @@ func NewBudgetRepository(db *pgxpool.Pool) *BudgetRepository {
 func (r *BudgetRepository) Create(ctx context.Context, req *model.CreateBudgetRequest) (*model.Budget, error) {
 	budget := &model.Budget{}
 	query := `
-		INSERT INTO budgets (category_id, amount, month, year)
-		VALUES ($1, $2, $3, $4)
-		RETURNING id, category_id, amount, month, year, created_at
+		WITH inserted AS (
+			INSERT INTO budgets (category_id, amount, month, year)
+			VALUES ((SELECT id FROM categories WHERE uuid = $1), $2, $3, $4)
+			RETURNING *
+		)
+		SELECT i.uuid, c.uuid, i.amount, i.month, i.year, i.created_at
+		FROM inserted i JOIN categories c ON c.id = i.category_id
 	`
 
 	err := r.db.QueryRow(ctx, query,
@@ -42,9 +46,9 @@ func (r *BudgetRepository) Create(ctx context.Context, req *model.CreateBudgetRe
 func (r *BudgetRepository) FindByID(ctx context.Context, id string) (*model.Budget, error) {
 	budget := &model.Budget{}
 	query := `
-		SELECT id, category_id, amount, month, year, created_at
-		FROM budgets
-		WHERE id = $1
+		SELECT b.uuid, c.uuid, b.amount, b.month, b.year, b.created_at
+		FROM budgets b JOIN categories c ON c.id = b.category_id
+		WHERE b.uuid = $1
 	`
 
 	err := r.db.QueryRow(ctx, query, id).Scan(
@@ -64,8 +68,8 @@ func (r *BudgetRepository) FindByID(ctx context.Context, id string) (*model.Budg
 
 func (r *BudgetRepository) FindAll(ctx context.Context, filters *model.BudgetFilters) ([]*model.Budget, error) {
 	query := `
-		SELECT id, category_id, amount, month, year, created_at
-		FROM budgets
+		SELECT b.uuid, c.uuid, b.amount, b.month, b.year, b.created_at
+		FROM budgets b JOIN categories c ON c.id = b.category_id
 		WHERE 1=1
 	`
 
@@ -73,18 +77,18 @@ func (r *BudgetRepository) FindAll(ctx context.Context, filters *model.BudgetFil
 	argPos := 1
 
 	if filters.Month > 0 {
-		query += fmt.Sprintf(" AND month = $%d", argPos)
+		query += fmt.Sprintf(" AND b.month = $%d", argPos)
 		args = append(args, filters.Month)
 		argPos++
 	}
 
 	if filters.Year > 0 {
-		query += fmt.Sprintf(" AND year = $%d", argPos)
+		query += fmt.Sprintf(" AND b.year = $%d", argPos)
 		args = append(args, filters.Year)
 		argPos++
 	}
 
-	query += " ORDER BY year DESC, month DESC"
+	query += " ORDER BY b.year DESC, b.month DESC"
 
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
@@ -114,10 +118,14 @@ func (r *BudgetRepository) Update(ctx context.Context, id string, req *model.Upd
 
 	budget := &model.Budget{}
 	query := `
-		UPDATE budgets
-		SET amount = $1
-		WHERE id = $2
-		RETURNING id, category_id, amount, month, year, created_at
+		WITH updated AS (
+			UPDATE budgets
+			SET amount = $1
+			WHERE uuid = $2
+			RETURNING *
+		)
+		SELECT up.uuid, c.uuid, up.amount, up.month, up.year, up.created_at
+		FROM updated up JOIN categories c ON c.id = up.category_id
 	`
 
 	err := r.db.QueryRow(ctx, query, *req.Amount, id).Scan(
@@ -136,7 +144,7 @@ func (r *BudgetRepository) Update(ctx context.Context, id string, req *model.Upd
 }
 
 func (r *BudgetRepository) Delete(ctx context.Context, id string) error {
-	query := `DELETE FROM budgets WHERE id = $1`
+	query := `DELETE FROM budgets WHERE uuid = $1`
 	result, err := r.db.Exec(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete budget: %w", err)
@@ -152,7 +160,7 @@ func (r *BudgetRepository) Delete(ctx context.Context, id string) error {
 func (r *BudgetRepository) GetSummary(ctx context.Context, month, year int) ([]*model.BudgetSummary, error) {
 	query := `
 		SELECT
-			b.category_id,
+			c.uuid,
 			c.name AS category_name,
 			b.amount AS budget_amount,
 			COALESCE(ABS(SUM(CASE WHEN t.amount < 0 THEN t.amount ELSE 0 END)), 0) AS actual_amount
@@ -162,7 +170,7 @@ func (r *BudgetRepository) GetSummary(ctx context.Context, month, year int) ([]*
 			AND EXTRACT(MONTH FROM t.date) = $1
 			AND EXTRACT(YEAR FROM t.date) = $2
 		WHERE b.month = $1 AND b.year = $2
-		GROUP BY b.category_id, c.name, b.amount
+		GROUP BY c.uuid, c.name, b.amount
 		ORDER BY c.name
 	`
 
