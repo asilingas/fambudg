@@ -10,6 +10,7 @@ describe("getNavForRole", () => {
     expect(labels).toContain("Categories")
     expect(labels).toContain("Budgets")
     expect(labels).toContain("Bills")
+    expect(labels).toContain("Search")
   })
 
   it("returns member items (no Users)", () => {
@@ -28,6 +29,7 @@ describe("getNavForRole", () => {
     expect(labels).toContain("Accounts")
     expect(labels).toContain("Categories")
     expect(labels).toContain("Reports")
+    expect(labels).toContain("Search")
     expect(labels).not.toContain("Budgets")
     expect(labels).not.toContain("Goals")
     expect(labels).not.toContain("Bills")

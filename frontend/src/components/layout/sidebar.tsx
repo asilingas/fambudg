@@ -8,6 +8,7 @@ import {
   BarChart3,
   Target,
   Receipt,
+  Search,
   Users,
   type LucideIcon,
 } from "lucide-react"
@@ -24,6 +25,7 @@ const iconMap: Record<string, LucideIcon> = {
   BarChart3,
   Target,
   Receipt,
+  Search,
   Users,
 }
 

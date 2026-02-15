@@ -16,6 +16,7 @@ export const navItems: NavItem[] = [
   { label: "Reports", path: "/reports", icon: "BarChart3", roles: ["admin", "member", "child"] },
   { label: "Goals", path: "/goals", icon: "Target", roles: ["admin", "member"] },
   { label: "Bills", path: "/bills", icon: "Receipt", roles: ["admin", "member"] },
+  { label: "Search", path: "/search", icon: "Search", roles: ["admin", "member", "child"] },
   { label: "Users", path: "/users", icon: "Users", roles: ["admin"] },
 ]
 

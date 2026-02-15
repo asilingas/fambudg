@@ -8,6 +8,9 @@ import DashboardPage from "@/pages/dashboard"
 import TransactionsPage from "@/pages/transactions"
 import AccountsPage from "@/pages/accounts"
 import CategoriesPage from "@/pages/categories"
+import BudgetsPage from "@/pages/budgets"
+import ReportsPage from "@/pages/reports"
+import SearchPage from "@/pages/search"
 
 export default function App() {
   return (
@@ -21,6 +24,11 @@ export default function App() {
               <Route path="/transactions" element={<TransactionsPage />} />
               <Route path="/accounts" element={<AccountsPage />} />
               <Route path="/categories" element={<CategoriesPage />} />
+              <Route path="/budgets" element={<ProtectedRoute allowedRoles={["admin", "member"]} />}>
+                <Route index element={<BudgetsPage />} />
+              </Route>
+              <Route path="/reports" element={<ReportsPage />} />
+              <Route path="/search" element={<SearchPage />} />
             </Route>
           </Route>
         </Routes>
