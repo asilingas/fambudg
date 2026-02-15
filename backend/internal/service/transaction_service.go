@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/asilingas/fambudg/backend/internal/model"
 	"github.com/asilingas/fambudg/backend/internal/repository"
@@ -109,4 +111,84 @@ func (s *TransactionService) Delete(ctx context.Context, id string) error {
 
 	// Delete transaction
 	return s.transactionRepo.Delete(ctx, id)
+}
+
+func (s *TransactionService) GenerateRecurring(ctx context.Context, userID string, upTo time.Time) (*model.GenerateRecurringResponse, error) {
+	templates, err := s.transactionRepo.FindRecurring(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	var generated int
+	var errors []string
+
+	for _, tmpl := range templates {
+		if tmpl.RecurringRule == nil {
+			continue
+		}
+
+		// Find the latest generated transaction for this template
+		latest, err := s.transactionRepo.FindLatestByTemplate(ctx, tmpl.UserID, tmpl.AccountID, tmpl.CategoryID, tmpl.Description)
+		if err != nil {
+			errors = append(errors, fmt.Sprintf("template %s: %s", tmpl.ID, err.Error()))
+			continue
+		}
+
+		// Determine start date: day after the latest generated, or the template date
+		startDate := tmpl.Date
+		if latest != nil {
+			startDate = latest.Date
+		}
+
+		// Generate occurrences from startDate to upTo
+		nextDate := nextOccurrence(startDate, tmpl.RecurringRule)
+		for !nextDate.After(upTo) {
+			req := &model.CreateTransactionRequest{
+				AccountID:   tmpl.AccountID,
+				CategoryID:  tmpl.CategoryID,
+				Amount:      tmpl.Amount,
+				Type:        tmpl.Type,
+				Description: tmpl.Description,
+				Date:        nextDate.Format("2006-01-02"),
+				IsShared:    tmpl.IsShared,
+				IsRecurring: false, // generated copies are not recurring
+				Tags:        tmpl.Tags,
+			}
+
+			_, err := s.Create(ctx, userID, req)
+			if err != nil {
+				errors = append(errors, fmt.Sprintf("template %s date %s: %s", tmpl.ID, nextDate.Format("2006-01-02"), err.Error()))
+				break
+			}
+
+			generated++
+			nextDate = nextOccurrence(nextDate, tmpl.RecurringRule)
+		}
+	}
+
+	return &model.GenerateRecurringResponse{
+		Generated:  generated,
+		Templates:  len(templates),
+		Errors:     errors,
+	}, nil
+}
+
+func nextOccurrence(from time.Time, rule *model.RecurringRule) time.Time {
+	switch rule.Frequency {
+	case "daily":
+		return from.AddDate(0, 0, 1)
+	case "weekly":
+		return from.AddDate(0, 0, 7)
+	case "monthly":
+		next := from.AddDate(0, 1, 0)
+		if rule.Day > 0 {
+			// Set to the specific day of month
+			next = time.Date(next.Year(), next.Month(), rule.Day, 0, 0, 0, 0, next.Location())
+		}
+		return next
+	case "yearly":
+		return from.AddDate(1, 0, 0)
+	default:
+		return from.AddDate(0, 1, 0)
+	}
 }

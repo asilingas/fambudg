@@ -71,6 +71,12 @@ type UpdateTransactionRequest struct {
 	Tags        []string `json:"tags,omitempty"`
 }
 
+type GenerateRecurringResponse struct {
+	Generated int      `json:"generated"`
+	Templates int      `json:"templates"`
+	Errors    []string `json:"errors,omitempty"`
+}
+
 type TransactionFilters struct {
 	AccountID  string
 	CategoryID string

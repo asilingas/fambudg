@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/asilingas/fambudg/backend/internal/middleware"
 	"github.com/asilingas/fambudg/backend/internal/model"
@@ -131,4 +132,31 @@ func (h *TransactionHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *TransactionHandler) GenerateRecurring(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	if userID == "" {
+		respondWithError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	// Optional upTo date from query param, defaults to today
+	upTo := time.Now()
+	if dateStr := r.URL.Query().Get("upTo"); dateStr != "" {
+		parsed, err := time.Parse("2006-01-02", dateStr)
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, "invalid upTo date format, use YYYY-MM-DD")
+			return
+		}
+		upTo = parsed
+	}
+
+	result, err := h.transactionService.GenerateRecurring(r.Context(), userID, upTo)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, result)
 }

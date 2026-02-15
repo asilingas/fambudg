@@ -97,6 +97,7 @@ func main() {
 		r.Get("/api/transactions/{id}", transactionHandler.Get)
 		r.Put("/api/transactions/{id}", transactionHandler.Update)
 		r.Delete("/api/transactions/{id}", transactionHandler.Delete)
+		r.Post("/api/transactions/generate-recurring", transactionHandler.GenerateRecurring)
 
 		// Budgets
 		r.Get("/api/budgets", budgetHandler.List)

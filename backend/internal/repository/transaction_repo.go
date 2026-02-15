@@ -224,6 +224,63 @@ func (r *TransactionRepository) Update(ctx context.Context, id string, req *mode
 	return transaction, nil
 }
 
+func (r *TransactionRepository) FindRecurring(ctx context.Context, userID string) ([]*model.Transaction, error) {
+	query := `
+		SELECT id, user_id, account_id, category_id, amount, type, description, date, is_shared, is_recurring, recurring_rule, tags, transfer_to_account_id, created_at, updated_at
+		FROM transactions
+		WHERE user_id = $1 AND is_recurring = true AND recurring_rule IS NOT NULL
+		ORDER BY date DESC
+	`
+
+	rows, err := r.db.Query(ctx, query, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find recurring transactions: %w", err)
+	}
+	defer rows.Close()
+
+	var transactions []*model.Transaction
+	for rows.Next() {
+		t := &model.Transaction{}
+		if err := rows.Scan(
+			&t.ID, &t.UserID, &t.AccountID, &t.CategoryID,
+			&t.Amount, &t.Type, &t.Description, &t.Date,
+			&t.IsShared, &t.IsRecurring, &t.RecurringRule,
+			&t.Tags, &t.TransferToAccountID, &t.CreatedAt, &t.UpdatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan recurring transaction: %w", err)
+		}
+		transactions = append(transactions, t)
+	}
+
+	return transactions, nil
+}
+
+func (r *TransactionRepository) FindLatestByTemplate(ctx context.Context, userID, accountID, categoryID, description string) (*model.Transaction, error) {
+	query := `
+		SELECT id, user_id, account_id, category_id, amount, type, description, date, is_shared, is_recurring, recurring_rule, tags, transfer_to_account_id, created_at, updated_at
+		FROM transactions
+		WHERE user_id = $1 AND account_id = $2 AND category_id = $3 AND description = $4 AND is_recurring = false
+		ORDER BY date DESC
+		LIMIT 1
+	`
+
+	t := &model.Transaction{}
+	err := r.db.QueryRow(ctx, query, userID, accountID, categoryID, description).Scan(
+		&t.ID, &t.UserID, &t.AccountID, &t.CategoryID,
+		&t.Amount, &t.Type, &t.Description, &t.Date,
+		&t.IsShared, &t.IsRecurring, &t.RecurringRule,
+		&t.Tags, &t.TransferToAccountID, &t.CreatedAt, &t.UpdatedAt,
+	)
+	if err == pgx.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to find latest transaction by template: %w", err)
+	}
+
+	return t, nil
+}
+
 func (r *TransactionRepository) Delete(ctx context.Context, id string) error {
 	query := `DELETE FROM transactions WHERE id = $1`
 	result, err := r.db.Exec(ctx, query, id)

@@ -355,8 +355,8 @@ fambudg/
 ### Phase 3 — Savings, Recurring & Bills
 - [x] Saving goals CRUD
 - [x] Contribute to saving goal endpoint
-- [ ] Recurring transaction rules
-- [ ] Recurring transaction auto-generation (cron or on-demand)
+- [x] Recurring transaction rules
+- [x] Recurring transaction auto-generation (cron or on-demand)
 - [x] Month-over-month trend report
 - [x] Bill reminders CRUD
 - [x] Mark bill as paid (auto-creates transaction)
