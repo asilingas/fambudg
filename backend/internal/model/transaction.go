@@ -83,4 +83,5 @@ type TransactionFilters struct {
 	StartDate  string // YYYY-MM-DD
 	EndDate    string // YYYY-MM-DD
 	Type       string
+	IsShared   *bool
 }

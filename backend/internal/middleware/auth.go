@@ -78,3 +78,19 @@ func GetUserRole(ctx context.Context) string {
 	}
 	return ""
 }
+
+// RequireRole returns middleware that restricts access to the given roles
+func RequireRole(roles ...string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			userRole := GetUserRole(r.Context())
+			for _, role := range roles {
+				if userRole == role {
+					next.ServeHTTP(w, r)
+					return
+				}
+			}
+			http.Error(w, `{"error":"forbidden"}`, http.StatusForbidden)
+		})
+	}
+}

@@ -115,6 +115,12 @@ func (r *TransactionRepository) FindByUserID(ctx context.Context, userID string,
 		argPos++
 	}
 
+	if filters.IsShared != nil {
+		query += fmt.Sprintf(" AND is_shared = $%d", argPos)
+		args = append(args, *filters.IsShared)
+		argPos++
+	}
+
 	query += " ORDER BY date DESC, created_at DESC"
 
 	rows, err := r.db.Query(ctx, query, args...)

@@ -50,6 +50,7 @@ func main() {
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(authService)
+	userHandler := handler.NewUserHandler(authService)
 	accountHandler := handler.NewAccountHandler(accountService)
 	categoryHandler := handler.NewCategoryHandler(categoryService)
 	transactionHandler := handler.NewTransactionHandler(transactionService)
@@ -71,33 +72,49 @@ func main() {
 	r.Post("/api/auth/register", authHandler.Register)
 	r.Post("/api/auth/login", authHandler.Login)
 
-	// Protected routes
+	// All authenticated users (admin, member, child)
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.AuthMiddleware(authService))
 
 		// Auth
 		r.Get("/api/auth/me", authHandler.GetMe)
 
-		// Accounts
+		// Accounts (scoped to own in handler)
 		r.Get("/api/accounts", accountHandler.List)
 		r.Post("/api/accounts", accountHandler.Create)
 		r.Get("/api/accounts/{id}", accountHandler.Get)
 		r.Put("/api/accounts/{id}", accountHandler.Update)
 		r.Delete("/api/accounts/{id}", accountHandler.Delete)
 
-		// Categories
+		// Categories (read for all)
 		r.Get("/api/categories", categoryHandler.List)
-		r.Post("/api/categories", categoryHandler.Create)
-		r.Put("/api/categories/{id}", categoryHandler.Update)
-		r.Delete("/api/categories/{id}", categoryHandler.Delete)
 
-		// Transactions
+		// Transactions (scoped to own in handler for child/member)
 		r.Get("/api/transactions", transactionHandler.List)
 		r.Post("/api/transactions", transactionHandler.Create)
 		r.Get("/api/transactions/{id}", transactionHandler.Get)
 		r.Put("/api/transactions/{id}", transactionHandler.Update)
 		r.Delete("/api/transactions/{id}", transactionHandler.Delete)
-		r.Post("/api/transactions/generate-recurring", transactionHandler.GenerateRecurring)
+
+		// Reports (scoped to own data in handler for child/member)
+		r.Get("/api/reports/dashboard", reportHandler.Dashboard)
+		r.Get("/api/reports/monthly", reportHandler.Monthly)
+		r.Get("/api/reports/by-category", reportHandler.ByCategory)
+		r.Get("/api/reports/trends", reportHandler.Trends)
+
+		// Search (scoped to own in handler)
+		r.Get("/api/search", reportHandler.Search)
+	})
+
+	// Admin + Member only routes
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.AuthMiddleware(authService))
+		r.Use(middleware.RequireRole("admin", "member"))
+
+		// Categories CRUD (create/update/delete)
+		r.Post("/api/categories", categoryHandler.Create)
+		r.Put("/api/categories/{id}", categoryHandler.Update)
+		r.Delete("/api/categories/{id}", categoryHandler.Delete)
 
 		// Budgets
 		r.Get("/api/budgets", budgetHandler.List)
@@ -105,16 +122,6 @@ func main() {
 		r.Put("/api/budgets/{id}", budgetHandler.Update)
 		r.Delete("/api/budgets/{id}", budgetHandler.Delete)
 		r.Get("/api/budgets/summary", budgetHandler.Summary)
-
-		// Reports
-		r.Get("/api/reports/dashboard", reportHandler.Dashboard)
-		r.Get("/api/reports/monthly", reportHandler.Monthly)
-		r.Get("/api/reports/by-category", reportHandler.ByCategory)
-		r.Get("/api/reports/by-member", reportHandler.ByMember)
-		r.Get("/api/reports/trends", reportHandler.Trends)
-
-		// Search
-		r.Get("/api/search", reportHandler.Search)
 
 		// Saving Goals
 		r.Get("/api/saving-goals", savingGoalHandler.List)
@@ -133,9 +140,27 @@ func main() {
 		// Transfers
 		r.Post("/api/transfers", transferHandler.Create)
 
+		// Recurring transactions
+		r.Post("/api/transactions/generate-recurring", transactionHandler.GenerateRecurring)
+
 		// Import / Export
 		r.Post("/api/import/csv", importExportHandler.ImportCSV)
 		r.Get("/api/export/csv", importExportHandler.ExportCSV)
+	})
+
+	// Admin-only routes
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.AuthMiddleware(authService))
+		r.Use(middleware.RequireRole("admin"))
+
+		// User management
+		r.Get("/api/users", userHandler.List)
+		r.Post("/api/users", userHandler.Create)
+		r.Put("/api/users/{id}", userHandler.Update)
+		r.Delete("/api/users/{id}", userHandler.Delete)
+
+		// Family member spending comparison
+		r.Get("/api/reports/by-member", reportHandler.ByMember)
 	})
 
 	// Health check

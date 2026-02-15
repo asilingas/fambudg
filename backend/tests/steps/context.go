@@ -13,49 +13,45 @@ import (
 )
 
 type TestContext struct {
-	Pool                *pgxpool.Pool
-	AuthService         *service.AuthService
-	TransactionService  *service.TransactionService
-	AccountService      *service.AccountService
-	CategoryService     *service.CategoryService
-	BudgetService       *service.BudgetService
-	ReportService       *service.ReportService
-	SavingGoalService   *service.SavingGoalService
+	Pool               *pgxpool.Pool
+	AuthService        *service.AuthService
+	TransactionService *service.TransactionService
+	AccountService     *service.AccountService
+	CategoryService    *service.CategoryService
+	BudgetService      *service.BudgetService
+	ReportService      *service.ReportService
+	SavingGoalService  *service.SavingGoalService
 	BillReminderService *service.BillReminderService
-	UserRepo            *repository.UserRepository
-	AccountRepo         *repository.AccountRepository
-	CategoryRepo        *repository.CategoryRepository
-	TransactionRepo     *repository.TransactionRepository
-	BudgetRepo          *repository.BudgetRepository
-	ReportRepo          *repository.ReportRepository
-	SavingGoalRepo      *repository.SavingGoalRepository
-	BillReminderRepo    *repository.BillReminderRepository
+	UserRepo           *repository.UserRepository
+	AccountRepo        *repository.AccountRepository
+	CategoryRepo       *repository.CategoryRepository
+	TransactionRepo    *repository.TransactionRepository
 
 	// Test state
-	CurrentUser          any
-	CurrentToken         string
-	CurrentAccount       any
-	CurrentCategory      any
-	CurrentTransaction   any
-	TransactionList      []any
-	CurrentBudget        any
-	BudgetList           []any
-	BudgetSummaryList    []any
-	DashboardResult      any
-	MonthlyReportResult  any
+	CurrentUser        any
+	CurrentToken       string
+	CurrentAccount     any
+	CurrentCategory    any
+	CurrentTransaction any
+	CurrentBudget      any
+	CurrentSavingGoal  any
+	CurrentBillReminder any
+	SecondAccount      any
+	TransactionList    []any
+	BudgetList         []any
+	BudgetSummaryList  []any
+	SavingGoalList     []any
+	BillReminderList   []any
 	CategoryReportResult []any
-	SearchResult         any
-	TrendResult          []any
-	CurrentSavingGoal    any
-	SavingGoalList       []any
-	CurrentBillReminder  any
-	BillReminderList     []any
-	SecondAccount        any
-	RecurringResult      any
-	ExportedCSV          []string
-	ImportedCount        int
-	LastError            error
-	LastStatusCode       int
+	TrendResult        []any
+	DashboardResult    any
+	MonthlyReportResult any
+	SearchResult       any
+	RecurringResult    any
+	ExportedCSV        []string
+	ImportedCount      int
+	LastError          error
+	LastStatusCode     int
 }
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
@@ -79,10 +75,10 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	registerReportSteps(ctx, tc)
 	registerSearchSteps(ctx, tc)
 	registerSavingGoalSteps(ctx, tc)
-	registerBillReminderSteps(ctx, tc)
-	registerTransferSteps(ctx, tc)
 	registerTrendSteps(ctx, tc)
+	registerTransferSteps(ctx, tc)
 	registerRecurringSteps(ctx, tc)
+	registerBillReminderSteps(ctx, tc)
 	registerCSVSteps(ctx, tc)
 }
 
@@ -126,20 +122,20 @@ func (tc *TestContext) setupTestDatabase() error {
 	tc.AccountRepo = repository.NewAccountRepository(tc.Pool)
 	tc.CategoryRepo = repository.NewCategoryRepository(tc.Pool)
 	tc.TransactionRepo = repository.NewTransactionRepository(tc.Pool)
-	tc.BudgetRepo = repository.NewBudgetRepository(tc.Pool)
-	tc.ReportRepo = repository.NewReportRepository(tc.Pool)
-	tc.SavingGoalRepo = repository.NewSavingGoalRepository(tc.Pool)
-	tc.BillReminderRepo = repository.NewBillReminderRepository(tc.Pool)
+	budgetRepo := repository.NewBudgetRepository(tc.Pool)
+	reportRepo := repository.NewReportRepository(tc.Pool)
+	savingGoalRepo := repository.NewSavingGoalRepository(tc.Pool)
+	billReminderRepo := repository.NewBillReminderRepository(tc.Pool)
 
 	// Initialize services
 	tc.AuthService = service.NewAuthService(tc.UserRepo, cfg.JWT.Secret)
 	tc.AccountService = service.NewAccountService(tc.AccountRepo)
 	tc.CategoryService = service.NewCategoryService(tc.CategoryRepo)
 	tc.TransactionService = service.NewTransactionService(tc.TransactionRepo, tc.AccountRepo)
-	tc.BudgetService = service.NewBudgetService(tc.BudgetRepo)
-	tc.ReportService = service.NewReportService(tc.ReportRepo, tc.AccountRepo)
-	tc.SavingGoalService = service.NewSavingGoalService(tc.SavingGoalRepo)
-	tc.BillReminderService = service.NewBillReminderService(tc.BillReminderRepo, tc.TransactionRepo, tc.AccountRepo)
+	tc.BudgetService = service.NewBudgetService(budgetRepo)
+	tc.ReportService = service.NewReportService(reportRepo, tc.AccountRepo)
+	tc.SavingGoalService = service.NewSavingGoalService(savingGoalRepo)
+	tc.BillReminderService = service.NewBillReminderService(billReminderRepo, tc.TransactionRepo, tc.AccountRepo)
 
 	return nil
 }
@@ -148,7 +144,7 @@ func (tc *TestContext) cleanupTestDatabase() {
 	if tc.Pool != nil {
 		// Clean up all tables
 		ctx := context.Background()
-		tc.Pool.Exec(ctx, "TRUNCATE bill_reminders, saving_goals, transactions, budgets, accounts, categories, users CASCADE")
+		tc.Pool.Exec(ctx, "TRUNCATE transactions, bill_reminders, saving_goals, budgets, accounts, categories, users CASCADE")
 		tc.Pool.Close()
 	}
 }

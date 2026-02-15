@@ -18,6 +18,18 @@ type RegisterRequest struct {
 	Name     string `json:"name" validate:"required,min=2,max=100"`
 }
 
+type CreateUserRequest struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=8"`
+	Name     string `json:"name" validate:"required,min=2,max=100"`
+	Role     string `json:"role" validate:"required,oneof=admin member child"`
+}
+
+type UpdateUserRequest struct {
+	Name *string `json:"name,omitempty" validate:"omitempty,min=2,max=100"`
+	Role *string `json:"role,omitempty" validate:"omitempty,oneof=admin member child"`
+}
+
 type LoginRequest struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required"`

@@ -72,6 +72,31 @@ func (s *AuthService) GetUserByID(ctx context.Context, userID string) (*model.Us
 	return s.userRepo.FindByID(ctx, userID)
 }
 
+// CreateUser creates a new user with the specified role (admin action)
+func (s *AuthService) CreateUser(ctx context.Context, req *model.CreateUserRequest) (*model.User, error) {
+	existingUser, _ := s.userRepo.FindByEmail(ctx, req.Email)
+	if existingUser != nil {
+		return nil, fmt.Errorf("user with this email already exists")
+	}
+
+	return s.userRepo.CreateWithRole(ctx, req)
+}
+
+// ListUsers returns all users
+func (s *AuthService) ListUsers(ctx context.Context) ([]*model.User, error) {
+	return s.userRepo.ListAll(ctx)
+}
+
+// UpdateUser updates a user's name and/or role
+func (s *AuthService) UpdateUser(ctx context.Context, userID string, req *model.UpdateUserRequest) (*model.User, error) {
+	return s.userRepo.Update(ctx, userID, req)
+}
+
+// DeleteUser deletes a user
+func (s *AuthService) DeleteUser(ctx context.Context, userID string) error {
+	return s.userRepo.Delete(ctx, userID)
+}
+
 // generateToken creates a JWT token for the user
 func (s *AuthService) generateToken(user *model.User) (string, error) {
 	claims := jwt.MapClaims{

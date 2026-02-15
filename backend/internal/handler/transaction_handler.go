@@ -40,6 +40,11 @@ func (h *TransactionHandler) List(w http.ResponseWriter, r *http.Request) {
 		EndDate:    r.URL.Query().Get("endDate"),
 	}
 
+	if isSharedStr := r.URL.Query().Get("isShared"); isSharedStr != "" {
+		isShared := isSharedStr == "true"
+		filters.IsShared = &isShared
+	}
+
 	transactions, err := h.transactionService.GetByUserID(r.Context(), userID, filters)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
