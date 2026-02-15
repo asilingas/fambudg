@@ -37,6 +37,10 @@ func (s *BillReminderService) GetAll(ctx context.Context) ([]*model.BillReminder
 	return s.billReminderRepo.FindAll(ctx)
 }
 
+func (s *BillReminderService) GetUpcoming(ctx context.Context, days int) ([]*model.BillReminder, error) {
+	return s.billReminderRepo.FindUpcoming(ctx, days)
+}
+
 func (s *BillReminderService) Update(ctx context.Context, id string, req *model.UpdateBillReminderRequest) (*model.BillReminder, error) {
 	return s.billReminderRepo.Update(ctx, id, req)
 }

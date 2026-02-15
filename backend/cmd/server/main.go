@@ -124,6 +124,7 @@ func main() {
 
 		// Bill Reminders
 		r.Get("/api/bill-reminders", billReminderHandler.List)
+		r.Get("/api/bill-reminders/upcoming", billReminderHandler.Upcoming)
 		r.Post("/api/bill-reminders", billReminderHandler.Create)
 		r.Put("/api/bill-reminders/{id}", billReminderHandler.Update)
 		r.Delete("/api/bill-reminders/{id}", billReminderHandler.Delete)

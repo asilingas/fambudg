@@ -99,6 +99,36 @@ func (r *BillReminderRepository) FindAll(ctx context.Context) ([]*model.BillRemi
 	return bills, nil
 }
 
+func (r *BillReminderRepository) FindUpcoming(ctx context.Context, days int) ([]*model.BillReminder, error) {
+	query := `
+		SELECT id, name, amount, due_day, frequency, category_id, account_id, is_active, next_due_date, created_at, updated_at
+		FROM bill_reminders
+		WHERE is_active = true AND next_due_date <= CURRENT_DATE + make_interval(days => $1)
+		ORDER BY next_due_date ASC
+	`
+
+	rows, err := r.db.Query(ctx, query, days)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find upcoming bill reminders: %w", err)
+	}
+	defer rows.Close()
+
+	var bills []*model.BillReminder
+	for rows.Next() {
+		bill := &model.BillReminder{}
+		if err := rows.Scan(
+			&bill.ID, &bill.Name, &bill.Amount, &bill.DueDay, &bill.Frequency,
+			&bill.CategoryID, &bill.AccountID, &bill.IsActive, &bill.NextDueDate,
+			&bill.CreatedAt, &bill.UpdatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan upcoming bill reminder: %w", err)
+		}
+		bills = append(bills, bill)
+	}
+
+	return bills, nil
+}
+
 func (r *BillReminderRepository) Update(ctx context.Context, id string, req *model.UpdateBillReminderRequest) (*model.BillReminder, error) {
 	updates := []string{}
 	args := []any{}

@@ -40,3 +40,11 @@ Feature: Bill reminders management
     When I pay the bill reminder on "2026-02-15"
     Then the bill payment should create a transaction
     And the bill next due date should be advanced
+
+  Scenario: Get upcoming bill reminders
+    Given the following bill reminders exist:
+      | name        | amount | dueDay | frequency | nextDueDate |
+      | Electricity | 15000  | 15     | monthly   | 2026-03-01  |
+      | Internet    | 7999   | 1      | monthly   | 2026-06-01  |
+    When I get upcoming bill reminders for the next 30 days
+    Then I should see 1 upcoming bill reminder

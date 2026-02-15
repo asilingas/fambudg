@@ -25,6 +25,8 @@ func registerBillReminderSteps(ctx *godog.ScenarioContext, tc *TestContext) {
 	ctx.Step(`^I pay the bill reminder on "([^"]*)"$`, tc.iPayTheBillReminder)
 	ctx.Step(`^the bill payment should create a transaction$`, tc.theBillPaymentShouldCreateTransaction)
 	ctx.Step(`^the bill next due date should be advanced$`, tc.theBillNextDueDateShouldBeAdvanced)
+	ctx.Step(`^I get upcoming bill reminders for the next (\d+) days$`, tc.iGetUpcomingBillReminders)
+	ctx.Step(`^I should see (\d+) upcoming bill reminder$`, tc.iShouldSeeNUpcomingBillReminders)
 }
 
 func (tc *TestContext) iCreateBillReminderWith(table *godog.Table) error {
@@ -280,5 +282,29 @@ func (tc *TestContext) theBillNextDueDateShouldBeAdvanced() error {
 		return fmt.Errorf("expected next due date to be advanced, got %v (original: %v)", updated.NextDueDate, bill.NextDueDate)
 	}
 
+	return nil
+}
+
+func (tc *TestContext) iGetUpcomingBillReminders(days int) error {
+	bills, err := tc.BillReminderService.GetUpcoming(context.Background(), days)
+	if err != nil {
+		tc.LastError = err
+		return nil
+	}
+
+	tc.BillReminderList = make([]any, len(bills))
+	for i, b := range bills {
+		tc.BillReminderList[i] = b
+	}
+
+	tc.LastError = nil
+	return nil
+}
+
+func (tc *TestContext) iShouldSeeNUpcomingBillReminders(expectedCount int) error {
+	actualCount := len(tc.BillReminderList)
+	if actualCount != expectedCount {
+		return fmt.Errorf("expected %d upcoming bill reminders, got %d", expectedCount, actualCount)
+	}
 	return nil
 }

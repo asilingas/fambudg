@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/asilingas/fambudg/backend/internal/middleware"
 	"github.com/asilingas/fambudg/backend/internal/model"
@@ -25,6 +26,26 @@ func NewBillReminderHandler(billReminderService *service.BillReminderService) *B
 
 func (h *BillReminderHandler) List(w http.ResponseWriter, r *http.Request) {
 	bills, err := h.billReminderService.GetAll(r.Context())
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, bills)
+}
+
+func (h *BillReminderHandler) Upcoming(w http.ResponseWriter, r *http.Request) {
+	days := 30
+	if daysStr := r.URL.Query().Get("days"); daysStr != "" {
+		parsed, err := strconv.Atoi(daysStr)
+		if err != nil || parsed < 1 {
+			respondWithError(w, http.StatusBadRequest, "invalid days parameter")
+			return
+		}
+		days = parsed
+	}
+
+	bills, err := h.billReminderService.GetUpcoming(r.Context(), days)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
