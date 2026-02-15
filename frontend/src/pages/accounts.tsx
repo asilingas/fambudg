@@ -24,6 +24,7 @@ import { toast } from "sonner"
 import api from "@/lib/api"
 import { formatCents, inputToCents, centsToInput } from "@/lib/format"
 import type { Account } from "@/lib/types"
+import { useLanguage } from "@/context/language-context"
 
 const ACCOUNT_TYPES = ["checking", "savings", "credit", "cash"] as const
 
@@ -45,6 +46,7 @@ export default function AccountsPage() {
   const [deleting, setDeleting] = useState<Account | null>(null)
   const [form, setForm] = useState<FormData>(emptyForm)
   const [submitting, setSubmitting] = useState(false)
+  const { t } = useLanguage()
 
   const fetchAccounts = useCallback(() => {
     api.get("/accounts").then((res) => {
@@ -90,15 +92,15 @@ export default function AccountsPage() {
       }
       if (editing) {
         await api.put(`/accounts/${editing.id}`, payload)
-        toast.success("Account updated")
+        toast.success(t("accounts.updated"))
       } else {
         await api.post("/accounts", payload)
-        toast.success("Account created")
+        toast.success(t("accounts.created"))
       }
       setDialogOpen(false)
       fetchAccounts()
     } catch {
-      toast.error("Failed to save account")
+      toast.error(t("accounts.saveFailed"))
     } finally {
       setSubmitting(false)
     }
@@ -109,12 +111,12 @@ export default function AccountsPage() {
     setSubmitting(true)
     try {
       await api.delete(`/accounts/${deleting.id}`)
-      toast.success("Account deleted")
+      toast.success(t("accounts.deleted"))
       setDeleteDialogOpen(false)
       setDeleting(null)
       fetchAccounts()
     } catch {
-      toast.error("Failed to delete account")
+      toast.error(t("accounts.deleteFailed"))
     } finally {
       setSubmitting(false)
     }
@@ -127,16 +129,16 @@ export default function AccountsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Accounts</h1>
+        <h1 className="text-2xl font-bold">{t("accounts.title")}</h1>
         <Button onClick={openCreate} size="sm">
           <Plus className="mr-1 h-4 w-4" />
-          Add Account
+          {t("accounts.add")}
         </Button>
       </div>
 
       {accounts.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          No accounts yet. Create one to get started.
+          {t("accounts.noData")}
         </p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -164,7 +166,7 @@ export default function AccountsPage() {
                     onClick={() => openEdit(account)}
                   >
                     <Pencil className="mr-1 h-3 w-3" />
-                    Edit
+                    {t("common.edit")}
                   </Button>
                   <Button
                     variant="outline"
@@ -172,7 +174,7 @@ export default function AccountsPage() {
                     onClick={() => openDelete(account)}
                   >
                     <Trash2 className="mr-1 h-3 w-3" />
-                    Delete
+                    {t("common.delete")}
                   </Button>
                 </div>
               </CardContent>
@@ -186,12 +188,12 @@ export default function AccountsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editing ? "Edit Account" : "New Account"}
+              {editing ? t("accounts.editTitle") : t("accounts.newTitle")}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name">{t("accounts.name")}</Label>
               <Input
                 id="name"
                 value={form.name}
@@ -200,7 +202,7 @@ export default function AccountsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="type">Type</Label>
+              <Label htmlFor="type">{t("accounts.type")}</Label>
               <Select
                 value={form.type}
                 onValueChange={(v) => setForm({ ...form, type: v })}
@@ -218,7 +220,7 @@ export default function AccountsPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="currency">Currency</Label>
+              <Label htmlFor="currency">{t("accounts.currency")}</Label>
               <Input
                 id="currency"
                 value={form.currency}
@@ -231,7 +233,7 @@ export default function AccountsPage() {
             </div>
             {!editing && (
               <div className="space-y-2">
-                <Label htmlFor="balance">Starting Balance</Label>
+                <Label htmlFor="balance">{t("accounts.startingBalance")}</Label>
                 <Input
                   id="balance"
                   type="number"
@@ -247,10 +249,10 @@ export default function AccountsPage() {
               variant="outline"
               onClick={() => setDialogOpen(false)}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button onClick={handleSubmit} disabled={submitting || !form.name}>
-              {submitting ? "Saving..." : "Save"}
+              {submitting ? t("common.saving") : t("common.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -260,25 +262,24 @@ export default function AccountsPage() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Account</DialogTitle>
+            <DialogTitle>{t("accounts.deleteTitle")}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Are you sure you want to delete &quot;{deleting?.name}&quot;? This
-            action cannot be undone.
+            {t("accounts.deleteConfirm").replace("{name}", deleting?.name ?? "")}
           </p>
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
               disabled={submitting}
             >
-              {submitting ? "Deleting..." : "Delete"}
+              {submitting ? t("common.deleting") : t("common.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

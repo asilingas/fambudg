@@ -21,8 +21,10 @@ import { toast } from "sonner"
 import api from "@/lib/api"
 import { formatCents } from "@/lib/format"
 import type { Account } from "@/lib/types"
+import { useLanguage } from "@/context/language-context"
 
 export default function TransfersPage() {
+  const { t } = useLanguage()
   const [accounts, setAccounts] = useState<Account[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -42,7 +44,7 @@ export default function TransfersPage() {
 
   async function handleTransfer() {
     if (fromAccountId === toAccountId) {
-      toast.error("Cannot transfer to the same account")
+      toast.error(t("transfers.sameAccountToast"))
       return
     }
 
@@ -55,14 +57,14 @@ export default function TransfersPage() {
         description: description || undefined,
         date,
       })
-      toast.success("Transfer completed")
+      toast.success(t("transfers.completed"))
       setAmount("")
       setDescription("")
       // Refresh account balances
       const res = await api.get("/accounts")
       setAccounts(res.data ?? [])
     } catch {
-      toast.error("Transfer failed")
+      toast.error(t("transfers.failed"))
     } finally {
       setSubmitting(false)
     }
@@ -78,19 +80,19 @@ export default function TransfersPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Transfer</h1>
+      <h1 className="text-2xl font-bold">{t("transfers.title")}</h1>
 
       <Card className="max-w-lg">
         <CardHeader>
-          <CardTitle className="text-sm font-medium">Move money between accounts</CardTitle>
+          <CardTitle className="text-sm font-medium">{t("transfers.subtitle")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-end gap-3">
             <div className="flex-1 space-y-2">
-              <Label>From</Label>
+              <Label>{t("transfers.from")}</Label>
               <Select value={fromAccountId} onValueChange={setFromAccountId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select account" />
+                  <SelectValue placeholder={t("transfers.selectAccount")} />
                 </SelectTrigger>
                 <SelectContent>
                   {accounts.map((a) => (
@@ -103,10 +105,10 @@ export default function TransfersPage() {
             </div>
             <ArrowRight className="mb-2 h-5 w-5 text-muted-foreground shrink-0" />
             <div className="flex-1 space-y-2">
-              <Label>To</Label>
+              <Label>{t("transfers.to")}</Label>
               <Select value={toAccountId} onValueChange={setToAccountId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select account" />
+                  <SelectValue placeholder={t("transfers.selectAccount")} />
                 </SelectTrigger>
                 <SelectContent>
                   {accounts.map((a) => (
@@ -120,7 +122,7 @@ export default function TransfersPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="transfer-amount">Amount</Label>
+            <Label htmlFor="transfer-amount">{t("transfers.amount")}</Label>
             <Input
               id="transfer-amount"
               type="number"
@@ -132,7 +134,7 @@ export default function TransfersPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="transfer-desc">Description (optional)</Label>
+            <Label htmlFor="transfer-desc">{t("transfers.descriptionOptional")}</Label>
             <Input
               id="transfer-desc"
               value={description}
@@ -142,7 +144,7 @@ export default function TransfersPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="transfer-date">Date</Label>
+            <Label htmlFor="transfer-date">{t("transfers.date")}</Label>
             <Input
               id="transfer-date"
               type="date"
@@ -153,18 +155,19 @@ export default function TransfersPage() {
 
           {fromAccount && toAccount && fromAccountId !== toAccountId && amount && (
             <div className="rounded-md bg-muted p-3 text-sm">
-              Transfer {formatCents(Math.round(parseFloat(amount) * 100))} from{" "}
-              <span className="font-medium">{fromAccount.name}</span> to{" "}
-              <span className="font-medium">{toAccount.name}</span>
+              {t("transfers.preview")
+                .replace("{amount}", formatCents(Math.round(parseFloat(amount) * 100)))
+                .replace("{from}", fromAccount.name)
+                .replace("{to}", toAccount.name)}
             </div>
           )}
 
           {fromAccountId && toAccountId && fromAccountId === toAccountId && (
-            <p className="text-sm text-destructive">Cannot transfer to the same account.</p>
+            <p className="text-sm text-destructive">{t("transfers.sameAccountError")}</p>
           )}
 
           <Button onClick={handleTransfer} disabled={submitting || !canSubmit} className="w-full">
-            {submitting ? "Transferring..." : "Transfer"}
+            {submitting ? t("transfers.transferring") : t("transfers.submit")}
           </Button>
         </CardContent>
       </Card>

@@ -4,7 +4,7 @@ Family budget tracking web app. Monorepo: Go backend + React frontend.
 
 ## Current Status
 
-Phases 1–5 complete. Full-stack app with Go backend and React frontend. Backend: auth, transactions, budgets, reports, saving goals, bill reminders, CSV import/export, recurring transactions, RBAC, allowances, family spending comparison. Frontend: all pages with role-aware navigation, Recharts visualizations, dark mode, loading skeletons, EUR currency formatting. 80 frontend tests + 49 backend BDD tests.
+Phases 1–6 complete. Full-stack app with Go backend and React frontend. Backend: auth, transactions, budgets, reports, saving goals, bill reminders, CSV import/export, recurring transactions, RBAC, allowances, family spending comparison. Frontend: all pages with role-aware navigation, Recharts visualizations, dark mode, loading skeletons, EUR currency formatting, i18n (English/Lithuanian). 96 frontend tests + 49 backend BDD tests.
 
 ## Tech Stack
 
@@ -155,9 +155,22 @@ go test ./...
 
 # From frontend/ directory
 
-# Frontend tests (80 tests)
+# Frontend tests (96 tests)
 npx vitest run
 ```
+
+## Internationalization (i18n)
+
+Two languages: English (default) and Lithuanian. Lightweight custom implementation — no external library.
+
+- **Translation files:** `frontend/src/lib/i18n/en.ts` and `lt.ts` — flat key-value objects with ~200 keys
+- **Context:** `frontend/src/context/language-context.tsx` — provides `t()` function and `toggleLanguage()`
+- **Usage in components:** `const { t } = useLanguage()` then `{t("key.name")}` in JSX
+- **Language toggle:** Top bar button (EN/LT), persisted to localStorage
+- **Navigation labels:** `navigation.ts` uses `labelKey` (translation key) instead of `label` (hardcoded string)
+- **Pattern:** Mirrors `useTheme` hook — localStorage persistence + state toggle
+
+When adding new strings: add key to both `en.ts` and `lt.ts`, then use `t("key")` in the component.
 
 ## Environment Variables
 

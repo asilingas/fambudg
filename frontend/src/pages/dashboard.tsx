@@ -5,10 +5,12 @@ import api from "@/lib/api"
 import { formatCents } from "@/lib/format"
 import type { DashboardResponse } from "@/lib/types"
 import { DashboardSkeleton } from "@/components/loading-skeleton"
+import { useLanguage } from "@/context/language-context"
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardResponse | null>(null)
   const [error, setError] = useState("")
+  const { t } = useLanguage()
 
   useEffect(() => {
     const now = new Date()
@@ -17,8 +19,8 @@ export default function DashboardPage() {
         params: { month: now.getMonth() + 1, year: now.getFullYear() },
       })
       .then((res) => setData(res.data))
-      .catch(() => setError("Failed to load dashboard"))
-  }, [])
+      .catch(() => setError(t("dashboard.loadError")))
+  }, [t])
 
   if (error) {
     return <p className="text-destructive">{error}</p>
@@ -34,14 +36,14 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
+      <h1 className="text-2xl font-bold">{t("dashboard.title")}</h1>
 
       {/* Month Summary */}
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Income
+              {t("dashboard.income")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -53,7 +55,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Expenses
+              {t("dashboard.expenses")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -65,7 +67,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Net
+              {t("dashboard.net")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -80,10 +82,10 @@ export default function DashboardPage() {
 
       {/* Accounts */}
       <div>
-        <h2 className="mb-3 text-lg font-semibold">Accounts</h2>
+        <h2 className="mb-3 text-lg font-semibold">{t("dashboard.accounts")}</h2>
         {accounts.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No accounts yet. Create one to get started.
+            {t("dashboard.noAccounts")}
           </p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -113,10 +115,10 @@ export default function DashboardPage() {
 
       {/* Recent Transactions */}
       <div>
-        <h2 className="mb-3 text-lg font-semibold">Recent Transactions</h2>
+        <h2 className="mb-3 text-lg font-semibold">{t("dashboard.recentTransactions")}</h2>
         {recentTransactions.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No transactions yet.
+            {t("dashboard.noTransactions")}
           </p>
         ) : (
           <div className="space-y-2">
@@ -127,7 +129,7 @@ export default function DashboardPage() {
               >
                 <div>
                   <p className="text-sm font-medium">
-                    {tx.description || "No description"}
+                    {tx.description || t("dashboard.noDescription")}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {new Date(tx.date).toLocaleDateString()}

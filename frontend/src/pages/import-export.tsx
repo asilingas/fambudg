@@ -11,8 +11,10 @@ import { Label } from "@/components/ui/label"
 import { Download, Upload } from "lucide-react"
 import { toast } from "sonner"
 import api from "@/lib/api"
+import { useLanguage } from "@/context/language-context"
 
 export default function ImportExportPage() {
+  const { t } = useLanguage()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [importing, setImporting] = useState(false)
   const [exporting, setExporting] = useState(false)
@@ -30,9 +32,9 @@ export default function ImportExportPage() {
       link.click()
       link.remove()
       window.URL.revokeObjectURL(url)
-      toast.success("CSV exported")
+      toast.success(t("importExport.exported"))
     } catch {
-      toast.error("Export failed")
+      toast.error(t("importExport.exportFailed"))
     } finally {
       setExporting(false)
     }
@@ -41,7 +43,7 @@ export default function ImportExportPage() {
   async function handleImport() {
     const file = fileInputRef.current?.files?.[0]
     if (!file) {
-      toast.error("Please select a CSV file")
+      toast.error(t("importExport.selectFile"))
       return
     }
 
@@ -54,11 +56,11 @@ export default function ImportExportPage() {
         headers: { "Content-Type": "multipart/form-data" },
       })
       const count = res.data?.imported ?? res.data?.count ?? 0
-      setImportResult(`Successfully imported ${count} transaction${count !== 1 ? "s" : ""}.`)
-      toast.success("CSV imported")
+      setImportResult(t("importExport.importSuccess").replace("{count}", String(count)).replace("{plural}", count !== 1 ? "s" : ""))
+      toast.success(t("importExport.imported"))
       if (fileInputRef.current) fileInputRef.current.value = ""
     } catch {
-      toast.error("Import failed")
+      toast.error(t("importExport.importFailed"))
     } finally {
       setImporting(false)
     }
@@ -66,21 +68,21 @@ export default function ImportExportPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Import / Export</h1>
+      <h1 className="text-2xl font-bold">{t("importExport.title")}</h1>
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Export Card */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium">Export Transactions</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("importExport.exportTitle")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Download all your transactions as a CSV file.
+              {t("importExport.exportDescription")}
             </p>
             <Button onClick={handleExport} disabled={exporting}>
               <Download className="mr-1 h-4 w-4" />
-              {exporting ? "Exporting..." : "Export CSV"}
+              {exporting ? t("importExport.exporting") : t("importExport.exportCsv")}
             </Button>
           </CardContent>
         </Card>
@@ -88,19 +90,19 @@ export default function ImportExportPage() {
         {/* Import Card */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium">Import Transactions</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("importExport.importTitle")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Upload a CSV file to import transactions in bulk.
+              {t("importExport.importDescription")}
             </p>
             <div className="space-y-2">
-              <Label htmlFor="csv-file">CSV File</Label>
+              <Label htmlFor="csv-file">{t("importExport.csvFile")}</Label>
               <Input id="csv-file" type="file" accept=".csv" ref={fileInputRef} />
             </div>
             <Button onClick={handleImport} disabled={importing}>
               <Upload className="mr-1 h-4 w-4" />
-              {importing ? "Importing..." : "Import CSV"}
+              {importing ? t("importExport.importing") : t("importExport.importCsv")}
             </Button>
             {importResult && (
               <p className="text-sm text-income">{importResult}</p>

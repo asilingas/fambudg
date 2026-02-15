@@ -1,4 +1,5 @@
 import { useAuth } from "@/context/auth-context"
+import { useLanguage } from "@/context/language-context"
 import { useTheme } from "@/hooks/use-theme"
 import { Button } from "@/components/ui/button"
 import { LogOut, Moon, Sun } from "lucide-react"
@@ -6,6 +7,7 @@ import { LogOut, Moon, Sun } from "lucide-react"
 export function TopBar() {
   const { user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
+  const { language, toggleLanguage } = useLanguage()
   if (!user) return null
 
   return (
@@ -19,6 +21,9 @@ export function TopBar() {
             {user.role}
           </span>
         </span>
+        <Button variant="ghost" size="icon" onClick={toggleLanguage} aria-label="Toggle language">
+          <span className="text-xs font-bold">{language === "en" ? "LT" : "EN"}</span>
+        </Button>
         <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
           {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </Button>

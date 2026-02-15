@@ -31,6 +31,7 @@ import { toast } from "sonner"
 import api from "@/lib/api"
 import { formatCents, inputToCents, centsToInput } from "@/lib/format"
 import type { Transaction, Account, Category } from "@/lib/types"
+import { useLanguage } from "@/context/language-context"
 
 interface FormData {
   amount: string
@@ -55,6 +56,7 @@ const emptyForm: FormData = {
 }
 
 export default function TransactionsPage() {
+  const { t } = useLanguage()
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [accounts, setAccounts] = useState<Account[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -157,15 +159,15 @@ export default function TransactionsPage() {
 
       if (editing) {
         await api.put(`/transactions/${editing.id}`, payload)
-        toast.success("Transaction updated")
+        toast.success(t("transactions.updated"))
       } else {
         await api.post("/transactions", payload)
-        toast.success("Transaction created")
+        toast.success(t("transactions.created"))
       }
       setDialogOpen(false)
       fetchTransactions()
     } catch {
-      toast.error("Failed to save transaction")
+      toast.error(t("transactions.saveFailed"))
     } finally {
       setSubmitting(false)
     }
@@ -176,12 +178,12 @@ export default function TransactionsPage() {
     setSubmitting(true)
     try {
       await api.delete(`/transactions/${deleting.id}`)
-      toast.success("Transaction deleted")
+      toast.success(t("transactions.deleted"))
       setDeleteDialogOpen(false)
       setDeleting(null)
       fetchTransactions()
     } catch {
-      toast.error("Failed to delete transaction")
+      toast.error(t("transactions.deleteFailed"))
     } finally {
       setSubmitting(false)
     }
@@ -194,10 +196,10 @@ export default function TransactionsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Transactions</h1>
+        <h1 className="text-2xl font-bold">{t("transactions.title")}</h1>
         <Button onClick={openCreate} size="sm">
           <Plus className="mr-1 h-4 w-4" />
-          Add Transaction
+          {t("transactions.add")}
         </Button>
       </div>
 
@@ -205,10 +207,10 @@ export default function TransactionsPage() {
       <div className="flex flex-wrap gap-3">
         <Select value={filterAccount} onValueChange={setFilterAccount}>
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="All Accounts" />
+            <SelectValue placeholder={t("transactions.allAccounts")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Accounts</SelectItem>
+            <SelectItem value="all">{t("transactions.allAccounts")}</SelectItem>
             {accounts.map((a) => (
               <SelectItem key={a.id} value={a.id}>
                 {a.name}
@@ -219,10 +221,10 @@ export default function TransactionsPage() {
 
         <Select value={filterCategory} onValueChange={setFilterCategory}>
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="All Categories" />
+            <SelectValue placeholder={t("transactions.allCategories")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="all">{t("transactions.allCategories")}</SelectItem>
             {categories.map((c) => (
               <SelectItem key={c.id} value={c.id}>
                 {c.name}
@@ -233,13 +235,13 @@ export default function TransactionsPage() {
 
         <Select value={filterType} onValueChange={setFilterType}>
           <SelectTrigger className="w-36">
-            <SelectValue placeholder="All Types" />
+            <SelectValue placeholder={t("transactions.allTypes")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="income">Income</SelectItem>
-            <SelectItem value="expense">Expense</SelectItem>
-            <SelectItem value="transfer">Transfer</SelectItem>
+            <SelectItem value="all">{t("transactions.allTypes")}</SelectItem>
+            <SelectItem value="income">{t("transactions.income")}</SelectItem>
+            <SelectItem value="expense">{t("transactions.expense")}</SelectItem>
+            <SelectItem value="transfer">{t("transactions.transfer")}</SelectItem>
           </SelectContent>
         </Select>
 
@@ -261,17 +263,17 @@ export default function TransactionsPage() {
 
       {/* Table */}
       {transactions.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No transactions found.</p>
+        <p className="text-sm text-muted-foreground">{t("transactions.noData")}</p>
       ) : (
         <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Account</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
+                <TableHead>{t("transactions.date")}</TableHead>
+                <TableHead>{t("transactions.description")}</TableHead>
+                <TableHead>{t("transactions.category")}</TableHead>
+                <TableHead>{t("transactions.account")}</TableHead>
+                <TableHead className="text-right">{t("transactions.amount")}</TableHead>
                 <TableHead />
               </TableRow>
             </TableHeader>
@@ -334,13 +336,13 @@ export default function TransactionsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editing ? "Edit Transaction" : "New Transaction"}
+              {editing ? t("transactions.editTitle") : t("transactions.newTitle")}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="tx-type">Type</Label>
+                <Label htmlFor="tx-type">{t("transactions.type")}</Label>
                 <Select
                   value={form.type}
                   onValueChange={(v) =>
@@ -351,13 +353,13 @@ export default function TransactionsPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="income">Income</SelectItem>
-                    <SelectItem value="expense">Expense</SelectItem>
+                    <SelectItem value="income">{t("transactions.income")}</SelectItem>
+                    <SelectItem value="expense">{t("transactions.expense")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="tx-amount">Amount</Label>
+                <Label htmlFor="tx-amount">{t("transactions.amount")}</Label>
                 <Input
                   id="tx-amount"
                   type="number"
@@ -371,13 +373,13 @@ export default function TransactionsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="tx-account">Account</Label>
+              <Label htmlFor="tx-account">{t("transactions.account")}</Label>
               <Select
                 value={form.accountId}
                 onValueChange={(v) => setForm({ ...form, accountId: v })}
               >
                 <SelectTrigger id="tx-account">
-                  <SelectValue placeholder="Select account" />
+                  <SelectValue placeholder={t("transactions.selectAccount")} />
                 </SelectTrigger>
                 <SelectContent>
                   {accounts.map((a) => (
@@ -390,13 +392,13 @@ export default function TransactionsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="tx-category">Category</Label>
+              <Label htmlFor="tx-category">{t("transactions.category")}</Label>
               <Select
                 value={form.categoryId}
                 onValueChange={(v) => setForm({ ...form, categoryId: v })}
               >
                 <SelectTrigger id="tx-category">
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder={t("transactions.selectCategory")} />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((c) => (
@@ -409,7 +411,7 @@ export default function TransactionsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="tx-desc">Description</Label>
+              <Label htmlFor="tx-desc">{t("transactions.description")}</Label>
               <Input
                 id="tx-desc"
                 value={form.description}
@@ -421,7 +423,7 @@ export default function TransactionsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="tx-date">Date</Label>
+              <Label htmlFor="tx-date">{t("transactions.date")}</Label>
               <Input
                 id="tx-date"
                 type="date"
@@ -431,7 +433,7 @@ export default function TransactionsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="tx-tags">Tags (comma-separated)</Label>
+              <Label htmlFor="tx-tags">{t("transactions.tags")}</Label>
               <Input
                 id="tx-tags"
                 value={form.tags}
@@ -450,12 +452,12 @@ export default function TransactionsPage() {
                 }
                 className="h-4 w-4 rounded border-input"
               />
-              <Label htmlFor="tx-shared">Shared family expense</Label>
+              <Label htmlFor="tx-shared">{t("transactions.sharedExpense")}</Label>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               onClick={handleSubmit}
@@ -463,7 +465,7 @@ export default function TransactionsPage() {
                 submitting || !form.amount || !form.accountId || !form.categoryId
               }
             >
-              {submitting ? "Saving..." : "Save"}
+              {submitting ? t("common.saving") : t("common.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -473,25 +475,24 @@ export default function TransactionsPage() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Transaction</DialogTitle>
+            <DialogTitle>{t("transactions.deleteTitle")}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Are you sure you want to delete this transaction? This action cannot
-            be undone.
+            {t("transactions.deleteConfirm")}
           </p>
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
               disabled={submitting}
             >
-              {submitting ? "Deleting..." : "Delete"}
+              {submitting ? t("common.deleting") : t("common.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

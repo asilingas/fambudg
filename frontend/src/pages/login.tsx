@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/context/auth-context"
+import { useLanguage } from "@/context/language-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -14,6 +15,7 @@ import {
 
 export default function LoginPage() {
   const { login } = useAuth()
+  const { t } = useLanguage()
   const navigate = useNavigate()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -40,7 +42,7 @@ export default function LoginPage() {
             .error,
         )
       } else {
-        setError("Login failed. Please try again.")
+        setError(t("login.error"))
       }
     } finally {
       setSubmitting(false)
@@ -51,9 +53,9 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center px-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Fambudg</CardTitle>
+          <CardTitle className="text-2xl">{t("login.title")}</CardTitle>
           <CardDescription>
-            Sign in to your family budget account
+            {t("login.subtitle")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -64,7 +66,7 @@ export default function LoginPage() {
               </p>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("login.email")}</Label>
               <Input
                 id="email"
                 type="email"
@@ -76,7 +78,7 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("login.password")}</Label>
               <Input
                 id="password"
                 type="password"
@@ -87,7 +89,7 @@ export default function LoginPage() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting ? "Signing in..." : "Sign in"}
+              {submitting ? t("login.submitting") : t("login.submit")}
             </Button>
           </form>
         </CardContent>

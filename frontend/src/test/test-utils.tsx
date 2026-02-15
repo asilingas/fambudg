@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import { render, type RenderOptions } from "@testing-library/react"
 import { MemoryRouter, type MemoryRouterProps } from "react-router-dom"
 import { AuthProvider } from "@/context/auth-context"
+import { LanguageProvider } from "@/context/language-context"
 
 interface WrapperProps {
   children: ReactNode
@@ -19,9 +20,11 @@ export function renderWithProviders(
 
   function Wrapper({ children }: WrapperProps) {
     return (
-      <MemoryRouter {...routerProps}>
-        <AuthProvider>{children}</AuthProvider>
-      </MemoryRouter>
+      <LanguageProvider>
+        <MemoryRouter {...routerProps}>
+          <AuthProvider>{children}</AuthProvider>
+        </MemoryRouter>
+      </LanguageProvider>
     )
   }
 

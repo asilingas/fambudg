@@ -16,6 +16,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import { useAuth } from "@/context/auth-context"
+import { useLanguage } from "@/context/language-context"
 import { getNavForRole } from "@/lib/navigation"
 import { cn } from "@/lib/utils"
 
@@ -37,6 +38,7 @@ const iconMap: Record<string, LucideIcon> = {
 
 export function Sidebar() {
   const { user } = useAuth()
+  const { t } = useLanguage()
   if (!user) return null
 
   const items = getNavForRole(user.role)
@@ -64,7 +66,7 @@ export function Sidebar() {
               }
             >
               {Icon && <Icon className="h-4 w-4" />}
-              {item.label}
+              {t(item.labelKey)}
             </NavLink>
           )
         })}

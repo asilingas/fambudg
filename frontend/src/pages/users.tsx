@@ -30,6 +30,7 @@ import { Plus, Pencil, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import api from "@/lib/api"
 import type { User } from "@/lib/types"
+import { useLanguage } from "@/context/language-context"
 
 interface CreateFormData {
   email: string
@@ -63,6 +64,7 @@ export default function UsersPage() {
   const [createForm, setCreateForm] = useState<CreateFormData>(emptyCreateForm)
   const [editForm, setEditForm] = useState<EditFormData>(emptyEditForm)
   const [submitting, setSubmitting] = useState(false)
+  const { t } = useLanguage()
 
   const fetchUsers = useCallback(() => {
     api.get("/users").then((res) => {
@@ -95,11 +97,11 @@ export default function UsersPage() {
     setSubmitting(true)
     try {
       await api.post("/users", createForm)
-      toast.success("User created")
+      toast.success(t("users.userCreated"))
       setCreateDialogOpen(false)
       fetchUsers()
     } catch {
-      toast.error("Failed to create user")
+      toast.error(t("users.createFailed"))
     } finally {
       setSubmitting(false)
     }
@@ -110,11 +112,11 @@ export default function UsersPage() {
     setSubmitting(true)
     try {
       await api.put(`/users/${editing.id}`, editForm)
-      toast.success("User updated")
+      toast.success(t("users.userUpdated"))
       setEditDialogOpen(false)
       fetchUsers()
     } catch {
-      toast.error("Failed to update user")
+      toast.error(t("users.updateFailed"))
     } finally {
       setSubmitting(false)
     }
@@ -125,12 +127,12 @@ export default function UsersPage() {
     setSubmitting(true)
     try {
       await api.delete(`/users/${deleting.id}`)
-      toast.success("User deleted")
+      toast.success(t("users.userDeleted"))
       setDeleteDialogOpen(false)
       setDeleting(null)
       fetchUsers()
     } catch {
-      toast.error("Failed to delete user")
+      toast.error(t("users.deleteFailed"))
     } finally {
       setSubmitting(false)
     }
@@ -143,24 +145,24 @@ export default function UsersPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">User Management</h1>
+        <h1 className="text-2xl font-bold">{t("users.title")}</h1>
         <Button onClick={openCreate} size="sm">
           <Plus className="mr-1 h-4 w-4" />
-          Add User
+          {t("users.add")}
         </Button>
       </div>
 
       {users.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No users found.</p>
+        <p className="text-sm text-muted-foreground">{t("users.noData")}</p>
       ) : (
         <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Created</TableHead>
+                <TableHead>{t("users.name")}</TableHead>
+                <TableHead>{t("users.email")}</TableHead>
+                <TableHead>{t("users.role")}</TableHead>
+                <TableHead>{t("users.created")}</TableHead>
                 <TableHead />
               </TableRow>
             </TableHeader>
@@ -196,37 +198,37 @@ export default function UsersPage() {
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create User</DialogTitle>
+            <DialogTitle>{t("users.createTitle")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="user-email">Email</Label>
+              <Label htmlFor="user-email">{t("users.email")}</Label>
               <Input id="user-email" type="email" value={createForm.email} onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="user-password">Password</Label>
+              <Label htmlFor="user-password">{t("users.password")}</Label>
               <Input id="user-password" type="password" value={createForm.password} onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="user-name">Name</Label>
+              <Label htmlFor="user-name">{t("users.name")}</Label>
               <Input id="user-name" value={createForm.name} onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label>Role</Label>
+              <Label>{t("users.role")}</Label>
               <Select value={createForm.role} onValueChange={(v) => setCreateForm({ ...createForm, role: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="member">Member</SelectItem>
-                  <SelectItem value="child">Child</SelectItem>
+                  <SelectItem value="admin">{t("users.admin")}</SelectItem>
+                  <SelectItem value="member">{t("users.member")}</SelectItem>
+                  <SelectItem value="child">{t("users.child")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>{t("common.cancel")}</Button>
             <Button onClick={handleCreate} disabled={submitting || !createForm.email || !createForm.password || !createForm.name}>
-              {submitting ? "Creating..." : "Create"}
+              {submitting ? t("users.creating") : t("users.create")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -236,29 +238,29 @@ export default function UsersPage() {
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
+            <DialogTitle>{t("users.editTitle")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-name">Name</Label>
+              <Label htmlFor="edit-name">{t("users.name")}</Label>
               <Input id="edit-name" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label>Role</Label>
+              <Label>{t("users.role")}</Label>
               <Select value={editForm.role} onValueChange={(v) => setEditForm({ ...editForm, role: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="member">Member</SelectItem>
-                  <SelectItem value="child">Child</SelectItem>
+                  <SelectItem value="admin">{t("users.admin")}</SelectItem>
+                  <SelectItem value="member">{t("users.member")}</SelectItem>
+                  <SelectItem value="child">{t("users.child")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>{t("common.cancel")}</Button>
             <Button onClick={handleEdit} disabled={submitting || !editForm.name}>
-              {submitting ? "Saving..." : "Save"}
+              {submitting ? t("common.saving") : t("common.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -268,15 +270,15 @@ export default function UsersPage() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete User</DialogTitle>
+            <DialogTitle>{t("users.deleteTitle")}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Are you sure you want to delete &quot;{deleting?.name}&quot; ({deleting?.email})? This action cannot be undone.
+            {t("users.deleteConfirm").replace("{name}", deleting?.name ?? "").replace("{email}", deleting?.email ?? "")}
           </p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>{t("common.cancel")}</Button>
             <Button variant="destructive" onClick={handleDelete} disabled={submitting}>
-              {submitting ? "Deleting..." : "Delete"}
+              {submitting ? t("common.deleting") : t("common.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

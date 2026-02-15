@@ -436,7 +436,16 @@ fambudg/
 - [x] Tests: skeleton components, theme toggle, top bar (80 tests total)
 - [x] Commit with `fixes #29`, push, verify issue closed
 
-### Phase 6 — Cloud Deployment
+### Phase 6 — Internationalization (EN/LT)
+- [x] Translation files: `en.ts`, `lt.ts`, `index.ts` with ~200 keys
+- [x] Language context + `useLanguage` hook (mirrors `useTheme` pattern)
+- [x] Language toggle (EN/LT) in top bar, persisted to localStorage
+- [x] Navigation labels via translation keys (`labelKey` instead of `label`)
+- [x] All 14 pages translated (login, dashboard, transactions, accounts, categories, budgets, reports, search, goals, bills, transfers, users, allowances, import-export)
+- [x] Layout components translated (sidebar, bottom-tabs, top-bar)
+- [x] i18n tests: translation key parity, language hook behavior (96 tests total)
+
+### Phase 7 — Cloud Deployment
 - [ ] Dockerfile for the Go backend
 - [ ] Dockerfile for the React frontend (nginx static serve)
 - [ ] docker-compose.prod.yml for full stack

@@ -29,6 +29,7 @@ import {
 import { Plus, Pencil, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { useAuth } from "@/context/auth-context"
+import { useLanguage } from "@/context/language-context"
 import api from "@/lib/api"
 import type { Category } from "@/lib/types"
 
@@ -43,6 +44,7 @@ const emptyForm: FormData = { name: "", type: "expense", icon: "", sortOrder: "0
 
 export default function CategoriesPage() {
   const { user } = useAuth()
+  const { t } = useLanguage()
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -99,15 +101,15 @@ export default function CategoriesPage() {
       }
       if (editing) {
         await api.put(`/categories/${editing.id}`, payload)
-        toast.success("Category updated")
+        toast.success(t("categories.updated"))
       } else {
         await api.post("/categories", payload)
-        toast.success("Category created")
+        toast.success(t("categories.created"))
       }
       setDialogOpen(false)
       fetchCategories()
     } catch {
-      toast.error("Failed to save category")
+      toast.error(t("categories.saveFailed"))
     } finally {
       setSubmitting(false)
     }
@@ -118,12 +120,12 @@ export default function CategoriesPage() {
     setSubmitting(true)
     try {
       await api.delete(`/categories/${deleting.id}`)
-      toast.success("Category deleted")
+      toast.success(t("categories.deleted"))
       setDeleteDialogOpen(false)
       setDeleting(null)
       fetchCategories()
     } catch {
-      toast.error("Failed to delete category")
+      toast.error(t("categories.deleteFailed"))
     } finally {
       setSubmitting(false)
     }
@@ -136,26 +138,26 @@ export default function CategoriesPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Categories</h1>
+        <h1 className="text-2xl font-bold">{t("categories.title")}</h1>
         {canCreate && (
           <Button onClick={openCreate} size="sm">
             <Plus className="mr-1 h-4 w-4" />
-            Add Category
+            {t("categories.add")}
           </Button>
         )}
       </div>
 
       {categories.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No categories yet.</p>
+        <p className="text-sm text-muted-foreground">{t("categories.noData")}</p>
       ) : (
         <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Icon</TableHead>
-                <TableHead>Order</TableHead>
+                <TableHead>{t("categories.name")}</TableHead>
+                <TableHead>{t("categories.type")}</TableHead>
+                <TableHead>{t("categories.icon")}</TableHead>
+                <TableHead>{t("categories.order")}</TableHead>
                 {canEditDelete && <TableHead />}
               </TableRow>
             </TableHeader>
@@ -206,12 +208,12 @@ export default function CategoriesPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editing ? "Edit Category" : "New Category"}
+              {editing ? t("categories.editTitle") : t("categories.newTitle")}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="cat-name">Name</Label>
+              <Label htmlFor="cat-name">{t("categories.name")}</Label>
               <Input
                 id="cat-name"
                 value={form.name}
@@ -220,7 +222,7 @@ export default function CategoriesPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="cat-type">Type</Label>
+              <Label htmlFor="cat-type">{t("categories.type")}</Label>
               <Select
                 value={form.type}
                 onValueChange={(v) =>
@@ -231,13 +233,13 @@ export default function CategoriesPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="expense">Expense</SelectItem>
-                  <SelectItem value="income">Income</SelectItem>
+                  <SelectItem value="expense">{t("transactions.expense")}</SelectItem>
+                  <SelectItem value="income">{t("transactions.income")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="cat-icon">Icon (optional)</Label>
+              <Label htmlFor="cat-icon">{t("categories.iconOptional")}</Label>
               <Input
                 id="cat-icon"
                 value={form.icon}
@@ -246,7 +248,7 @@ export default function CategoriesPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="cat-order">Sort Order</Label>
+              <Label htmlFor="cat-order">{t("categories.sortOrder")}</Label>
               <Input
                 id="cat-order"
                 type="number"
@@ -259,10 +261,10 @@ export default function CategoriesPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button onClick={handleSubmit} disabled={submitting || !form.name}>
-              {submitting ? "Saving..." : "Save"}
+              {submitting ? t("common.saving") : t("common.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -272,25 +274,24 @@ export default function CategoriesPage() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Category</DialogTitle>
+            <DialogTitle>{t("categories.deleteTitle")}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Are you sure you want to delete &quot;{deleting?.name}&quot;? This
-            action cannot be undone.
+            {t("categories.deleteConfirm").replace("{name}", deleting?.name ?? "")}
           </p>
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
               disabled={submitting}
             >
-              {submitting ? "Deleting..." : "Delete"}
+              {submitting ? t("common.deleting") : t("common.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

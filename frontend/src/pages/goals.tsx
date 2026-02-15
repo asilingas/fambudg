@@ -21,6 +21,7 @@ import {
 import { Plus, Pencil, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
 import { useAuth } from "@/context/auth-context"
+import { useLanguage } from "@/context/language-context"
 import api from "@/lib/api"
 import { formatCents } from "@/lib/format"
 import type { SavingGoal } from "@/lib/types"
@@ -37,6 +38,7 @@ const emptyForm: GoalFormData = { name: "", targetAmount: "", targetDate: "", pr
 export default function GoalsPage() {
   const { user } = useAuth()
   const isAdmin = user?.role === "admin"
+  const { t } = useLanguage()
 
   const [goals, setGoals] = useState<SavingGoal[]>([])
   const [loading, setLoading] = useState(true)
@@ -93,15 +95,15 @@ export default function GoalsPage() {
       }
       if (editing) {
         await api.put(`/saving-goals/${editing.id}`, payload)
-        toast.success("Goal updated")
+        toast.success(t("goals.updated"))
       } else {
         await api.post("/saving-goals", payload)
-        toast.success("Goal created")
+        toast.success(t("goals.created"))
       }
       setDialogOpen(false)
       fetchGoals()
     } catch {
-      toast.error("Failed to save goal")
+      toast.error(t("goals.saveFailed"))
     } finally {
       setSubmitting(false)
     }
@@ -114,11 +116,11 @@ export default function GoalsPage() {
       await api.post(`/saving-goals/${contributingGoal.id}/contribute`, {
         amount: Math.round(parseFloat(contributeAmount) * 100),
       })
-      toast.success("Contribution added")
+      toast.success(t("goals.contributionAdded"))
       setContributeDialogOpen(false)
       fetchGoals()
     } catch {
-      toast.error("Failed to contribute")
+      toast.error(t("goals.contributeFailed"))
     } finally {
       setSubmitting(false)
     }
@@ -131,17 +133,17 @@ export default function GoalsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Saving Goals</h1>
+        <h1 className="text-2xl font-bold">{t("goals.title")}</h1>
         {isAdmin && (
           <Button onClick={openCreate} size="sm">
             <Plus className="mr-1 h-4 w-4" />
-            Add Goal
+            {t("goals.add")}
           </Button>
         )}
       </div>
 
       {goals.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No saving goals yet.</p>
+        <p className="text-sm text-muted-foreground">{t("goals.noData")}</p>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {goals.map((goal) => {
@@ -159,11 +161,11 @@ export default function GoalsPage() {
                       {isCompleted && (
                         <Badge variant="default" className="gap-1">
                           <CheckCircle2 className="h-3 w-3" />
-                          Completed
+                          {t("goals.completed")}
                         </Badge>
                       )}
                       {goal.status === "cancelled" && (
-                        <Badge variant="secondary">Cancelled</Badge>
+                        <Badge variant="secondary">{t("goals.cancelled")}</Badge>
                       )}
                     </div>
                     {isAdmin && !isCompleted && (
@@ -176,17 +178,17 @@ export default function GoalsPage() {
                 <CardContent>
                   <div className="flex items-center justify-between text-sm mb-2">
                     <span>{formatCents(goal.currentAmount)}</span>
-                    <span>of {formatCents(goal.targetAmount)}</span>
+                    <span>{t("goals.of")} {formatCents(goal.targetAmount)}</span>
                   </div>
                   <Progress value={pct} />
                   <div className="flex items-center justify-between mt-2">
                     <p className="text-xs text-muted-foreground">
-                      {pct.toFixed(0)}% reached
-                      {goal.targetDate && ` · Due ${goal.targetDate.slice(0, 10)}`}
+                      {pct.toFixed(0)}% {t("goals.reached")}
+                      {goal.targetDate && ` · ${t("goals.due")} ${goal.targetDate.slice(0, 10)}`}
                     </p>
                     {isAdmin && !isCompleted && goal.status !== "cancelled" && (
                       <Button variant="outline" size="sm" onClick={() => openContribute(goal)}>
-                        Contribute
+                        {t("goals.contribute")}
                       </Button>
                     )}
                   </div>
@@ -201,11 +203,11 @@ export default function GoalsPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editing ? "Edit Goal" : "New Saving Goal"}</DialogTitle>
+            <DialogTitle>{editing ? t("goals.editTitle") : t("goals.newTitle")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="goal-name">Name</Label>
+              <Label htmlFor="goal-name">{t("goals.name")}</Label>
               <Input
                 id="goal-name"
                 value={form.name}
@@ -214,7 +216,7 @@ export default function GoalsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="goal-target">Target Amount</Label>
+              <Label htmlFor="goal-target">{t("goals.targetAmount")}</Label>
               <Input
                 id="goal-target"
                 type="number"
@@ -225,7 +227,7 @@ export default function GoalsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="goal-date">Target Date (optional)</Label>
+              <Label htmlFor="goal-date">{t("goals.targetDate")}</Label>
               <Input
                 id="goal-date"
                 type="date"
@@ -234,7 +236,7 @@ export default function GoalsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="goal-priority">Priority</Label>
+              <Label htmlFor="goal-priority">{t("goals.priority")}</Label>
               <Input
                 id="goal-priority"
                 type="number"
@@ -244,9 +246,9 @@ export default function GoalsPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>{t("common.cancel")}</Button>
             <Button onClick={handleSubmit} disabled={submitting || !form.name || !form.targetAmount}>
-              {submitting ? "Saving..." : "Save"}
+              {submitting ? t("common.saving") : t("common.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -256,14 +258,14 @@ export default function GoalsPage() {
       <Dialog open={contributeDialogOpen} onOpenChange={setContributeDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Contribute to {contributingGoal?.name}</DialogTitle>
+            <DialogTitle>{t("goals.contributeTitle").replace("{name}", contributingGoal?.name ?? "")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Current: {contributingGoal ? formatCents(contributingGoal.currentAmount) : ""} / {contributingGoal ? formatCents(contributingGoal.targetAmount) : ""}
+              {t("goals.current")} {contributingGoal ? formatCents(contributingGoal.currentAmount) : ""} / {contributingGoal ? formatCents(contributingGoal.targetAmount) : ""}
             </p>
             <div className="space-y-2">
-              <Label htmlFor="contribute-amount">Amount</Label>
+              <Label htmlFor="contribute-amount">{t("goals.amount")}</Label>
               <Input
                 id="contribute-amount"
                 type="number"
@@ -275,9 +277,9 @@ export default function GoalsPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setContributeDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setContributeDialogOpen(false)}>{t("common.cancel")}</Button>
             <Button onClick={handleContribute} disabled={submitting || !contributeAmount}>
-              {submitting ? "Contributing..." : "Contribute"}
+              {submitting ? t("goals.contributing") : t("goals.contribute")}
             </Button>
           </DialogFooter>
         </DialogContent>

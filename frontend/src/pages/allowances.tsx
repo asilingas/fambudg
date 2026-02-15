@@ -27,6 +27,7 @@ import {
 import { Plus, Pencil } from "lucide-react"
 import { toast } from "sonner"
 import { useAuth } from "@/context/auth-context"
+import { useLanguage } from "@/context/language-context"
 import api from "@/lib/api"
 import { formatCents } from "@/lib/format"
 import type { Allowance, User } from "@/lib/types"
@@ -42,6 +43,7 @@ const emptyForm: FormData = { userId: "", amount: "", periodStart: "" }
 export default function AllowancesPage() {
   const { user } = useAuth()
   const isAdmin = user?.role === "admin"
+  const { t } = useLanguage()
 
   const [allowances, setAllowances] = useState<Allowance[]>([])
   const [users, setUsers] = useState<User[]>([])
@@ -98,15 +100,15 @@ export default function AllowancesPage() {
       }
       if (editing) {
         await api.put(`/allowances/${editing.id}`, payload)
-        toast.success("Allowance updated")
+        toast.success(t("allowances.updated"))
       } else {
         await api.post("/allowances", payload)
-        toast.success("Allowance created")
+        toast.success(t("allowances.created"))
       }
       setDialogOpen(false)
       fetchData()
     } catch {
-      toast.error("Failed to save allowance")
+      toast.error(t("allowances.saveFailed"))
     } finally {
       setSubmitting(false)
     }
@@ -119,17 +121,17 @@ export default function AllowancesPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Allowances</h1>
+        <h1 className="text-2xl font-bold">{t("allowances.title")}</h1>
         {isAdmin && (
           <Button onClick={openCreate} size="sm">
             <Plus className="mr-1 h-4 w-4" />
-            Set Allowance
+            {t("allowances.add")}
           </Button>
         )}
       </div>
 
       {allowances.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No allowances set.</p>
+        <p className="text-sm text-muted-foreground">{t("allowances.noData")}</p>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {allowances.map((a) => {
@@ -141,7 +143,7 @@ export default function AllowancesPage() {
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm font-medium">
-                      {isAdmin ? userName(a.userId) : "My Allowance"}
+                      {isAdmin ? userName(a.userId) : t("allowances.myAllowance")}
                     </CardTitle>
                     {isAdmin && (
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(a)}>
@@ -152,13 +154,13 @@ export default function AllowancesPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between text-sm mb-1">
-                    <span>Monthly: {formatCents(a.amount)}</span>
-                    <span>Period: {a.periodStart.slice(0, 10)}</span>
+                    <span>{t("allowances.monthly")} {formatCents(a.amount)}</span>
+                    <span>{t("allowances.period")} {a.periodStart.slice(0, 10)}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm mb-2">
-                    <span>Spent: {formatCents(a.spent)}</span>
+                    <span>{t("allowances.spent")} {formatCents(a.spent)}</span>
                     <span className={overspent ? "text-destructive font-medium" : "text-income"}>
-                      Remaining: {formatCents(a.remaining)}
+                      {t("allowances.remaining")} {formatCents(a.remaining)}
                     </span>
                   </div>
                   <Progress value={pct} className={overspent ? "[&>div]:bg-destructive" : ""} />
@@ -173,13 +175,13 @@ export default function AllowancesPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editing ? "Edit Allowance" : "Set Allowance"}</DialogTitle>
+            <DialogTitle>{editing ? t("allowances.editTitle") : t("allowances.newTitle")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Child</Label>
+              <Label>{t("allowances.child")}</Label>
               <Select value={form.userId} onValueChange={(v) => setForm({ ...form, userId: v })}>
-                <SelectTrigger><SelectValue placeholder="Select child" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t("allowances.selectChild")} /></SelectTrigger>
                 <SelectContent>
                   {childUsers.map((u) => (
                     <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
@@ -188,18 +190,18 @@ export default function AllowancesPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="allowance-amount">Monthly Amount</Label>
+              <Label htmlFor="allowance-amount">{t("allowances.monthlyAmount")}</Label>
               <Input id="allowance-amount" type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="e.g. 50.00" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="allowance-start">Period Start</Label>
+              <Label htmlFor="allowance-start">{t("allowances.periodStart")}</Label>
               <Input id="allowance-start" type="date" value={form.periodStart} onChange={(e) => setForm({ ...form, periodStart: e.target.value })} />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>{t("common.cancel")}</Button>
             <Button onClick={handleSubmit} disabled={submitting || !form.userId || !form.amount || !form.periodStart}>
-              {submitting ? "Saving..." : "Save"}
+              {submitting ? t("common.saving") : t("common.save")}
             </Button>
           </DialogFooter>
         </DialogContent>

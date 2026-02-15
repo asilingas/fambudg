@@ -23,6 +23,7 @@ import api from "@/lib/api"
 import { formatCents } from "@/lib/format"
 import type { Transaction, Category, Account } from "@/lib/types"
 import { useEffect } from "react"
+import { useLanguage } from "@/context/language-context"
 
 export default function SearchPage() {
   const [description, setDescription] = useState("")
@@ -41,6 +42,8 @@ export default function SearchPage() {
 
   const [categories, setCategories] = useState<Category[]>([])
   const [accounts, setAccounts] = useState<Account[]>([])
+
+  const { t } = useLanguage()
 
   useEffect(() => {
     Promise.all([api.get("/categories"), api.get("/accounts")]).then(
@@ -100,11 +103,11 @@ export default function SearchPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Search Transactions</h1>
+      <h1 className="text-2xl font-bold">{t("search.title")}</h1>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-2">
-          <Label htmlFor="search-desc">Description</Label>
+          <Label htmlFor="search-desc">{t("search.description")}</Label>
           <Input
             id="search-desc"
             value={description}
@@ -113,7 +116,7 @@ export default function SearchPage() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="search-start">Start Date</Label>
+          <Label htmlFor="search-start">{t("search.startDate")}</Label>
           <Input
             id="search-start"
             type="date"
@@ -122,7 +125,7 @@ export default function SearchPage() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="search-end">End Date</Label>
+          <Label htmlFor="search-end">{t("search.endDate")}</Label>
           <Input
             id="search-end"
             type="date"
@@ -131,13 +134,13 @@ export default function SearchPage() {
           />
         </div>
         <div className="space-y-2">
-          <Label>Category</Label>
+          <Label>{t("search.category")}</Label>
           <Select value={categoryId} onValueChange={setCategoryId}>
             <SelectTrigger>
-              <SelectValue placeholder="All" />
+              <SelectValue placeholder={t("search.all")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="all">{t("search.all")}</SelectItem>
               {categories.map((c) => (
                 <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
               ))}
@@ -145,13 +148,13 @@ export default function SearchPage() {
           </Select>
         </div>
         <div className="space-y-2">
-          <Label>Account</Label>
+          <Label>{t("search.account")}</Label>
           <Select value={accountId} onValueChange={setAccountId}>
             <SelectTrigger>
-              <SelectValue placeholder="All" />
+              <SelectValue placeholder={t("search.all")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="all">{t("search.all")}</SelectItem>
               {accounts.map((a) => (
                 <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
               ))}
@@ -159,7 +162,7 @@ export default function SearchPage() {
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="search-min">Min Amount</Label>
+          <Label htmlFor="search-min">{t("search.minAmount")}</Label>
           <Input
             id="search-min"
             type="number"
@@ -170,7 +173,7 @@ export default function SearchPage() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="search-max">Max Amount</Label>
+          <Label htmlFor="search-max">{t("search.maxAmount")}</Label>
           <Input
             id="search-max"
             type="number"
@@ -181,7 +184,7 @@ export default function SearchPage() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="search-tags">Tags</Label>
+          <Label htmlFor="search-tags">{t("search.tags")}</Label>
           <Input
             id="search-tags"
             value={tags}
@@ -194,17 +197,17 @@ export default function SearchPage() {
       <div className="flex gap-2">
         <Button onClick={handleSearch} disabled={loading}>
           <Search className="mr-1 h-4 w-4" />
-          {loading ? "Searching..." : "Search"}
+          {loading ? t("search.searching") : t("search.submit")}
         </Button>
         <Button variant="outline" onClick={handleClear}>
-          Clear
+          {t("search.clear")}
         </Button>
       </div>
 
       {searched && (
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground">
-            {totalCount} result{totalCount !== 1 ? "s" : ""} found
+            {t("search.resultCount").replace("{count}", String(totalCount)).replace("{plural}", totalCount !== 1 ? "s" : "")}
           </p>
 
           {results.length > 0 ? (
@@ -212,11 +215,11 @@ export default function SearchPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Account</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead>{t("search.date")}</TableHead>
+                    <TableHead>{t("search.description")}</TableHead>
+                    <TableHead>{t("search.category")}</TableHead>
+                    <TableHead>{t("search.account")}</TableHead>
+                    <TableHead className="text-right">{t("search.amount")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -246,7 +249,7 @@ export default function SearchPage() {
               </Table>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">No transactions found matching your criteria.</p>
+            <p className="text-sm text-muted-foreground">{t("search.noResults")}</p>
           )}
         </div>
       )}

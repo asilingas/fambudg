@@ -35,6 +35,7 @@ import {
 import { Plus, Pencil, Trash2, CreditCard } from "lucide-react"
 import { toast } from "sonner"
 import { useAuth } from "@/context/auth-context"
+import { useLanguage } from "@/context/language-context"
 import api from "@/lib/api"
 import { formatCents } from "@/lib/format"
 import type { BillReminder, Category, Account } from "@/lib/types"
@@ -62,6 +63,7 @@ const emptyForm: FormData = {
 export default function BillsPage() {
   const { user } = useAuth()
   const isAdmin = user?.role === "admin"
+  const { t } = useLanguage()
 
   const [bills, setBills] = useState<BillReminder[]>([])
   const [upcoming, setUpcoming] = useState<BillReminder[]>([])
@@ -159,15 +161,15 @@ export default function BillsPage() {
       }
       if (editing) {
         await api.put(`/bill-reminders/${editing.id}`, payload)
-        toast.success("Bill reminder updated")
+        toast.success(t("bills.updated"))
       } else {
         await api.post("/bill-reminders", payload)
-        toast.success("Bill reminder created")
+        toast.success(t("bills.created"))
       }
       setDialogOpen(false)
       fetchData()
     } catch {
-      toast.error("Failed to save bill reminder")
+      toast.error(t("bills.saveFailed"))
     } finally {
       setSubmitting(false)
     }
@@ -178,12 +180,12 @@ export default function BillsPage() {
     setSubmitting(true)
     try {
       await api.delete(`/bill-reminders/${deleting.id}`)
-      toast.success("Bill reminder deleted")
+      toast.success(t("bills.deleted"))
       setDeleteDialogOpen(false)
       setDeleting(null)
       fetchData()
     } catch {
-      toast.error("Failed to delete bill reminder")
+      toast.error(t("bills.deleteFailed"))
     } finally {
       setSubmitting(false)
     }
@@ -197,12 +199,12 @@ export default function BillsPage() {
         accountId: payAccountId,
         date: payDate,
       })
-      toast.success("Bill marked as paid")
+      toast.success(t("bills.paid"))
       setPayDialogOpen(false)
       setPaying(null)
       fetchData()
     } catch {
-      toast.error("Failed to pay bill")
+      toast.error(t("bills.payFailed"))
     } finally {
       setSubmitting(false)
     }
@@ -215,11 +217,11 @@ export default function BillsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Bill Reminders</h1>
+        <h1 className="text-2xl font-bold">{t("bills.title")}</h1>
         {isAdmin && (
           <Button onClick={openCreate} size="sm">
             <Plus className="mr-1 h-4 w-4" />
-            Add Bill
+            {t("bills.add")}
           </Button>
         )}
       </div>
@@ -227,7 +229,7 @@ export default function BillsPage() {
       {/* Upcoming Bills */}
       {upcoming.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold">Upcoming</h2>
+          <h2 className="text-lg font-semibold">{t("bills.upcoming")}</h2>
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
             {upcoming.map((bill) => {
               const overdue = isOverdue(bill.nextDueDate)
@@ -236,13 +238,13 @@ export default function BillsPage() {
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm font-medium">{bill.name}</CardTitle>
-                      {overdue && <Badge variant="destructive">Overdue</Badge>}
+                      {overdue && <Badge variant="destructive">{t("bills.overdue")}</Badge>}
                     </div>
                   </CardHeader>
                   <CardContent>
                     <p className="text-lg font-bold">{formatCents(bill.amount)}</p>
                     <p className="text-xs text-muted-foreground">
-                      Due {bill.nextDueDate.slice(0, 10)} · {bill.frequency}
+                      {t("bills.due")} {bill.nextDueDate.slice(0, 10)} · {bill.frequency}
                     </p>
                     <Button
                       variant="outline"
@@ -251,7 +253,7 @@ export default function BillsPage() {
                       onClick={() => openPay(bill)}
                     >
                       <CreditCard className="mr-1 h-3 w-3" />
-                      Mark as Paid
+                      {t("bills.markAsPaid")}
                     </Button>
                   </CardContent>
                 </Card>
@@ -263,20 +265,20 @@ export default function BillsPage() {
 
       {/* All Bills Table */}
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold">All Bills</h2>
+        <h2 className="text-lg font-semibold">{t("bills.allBills")}</h2>
         {bills.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No bill reminders yet.</p>
+          <p className="text-sm text-muted-foreground">{t("bills.noData")}</p>
         ) : (
           <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Frequency</TableHead>
-                  <TableHead>Next Due</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Account</TableHead>
+                  <TableHead>{t("bills.name")}</TableHead>
+                  <TableHead>{t("bills.amount")}</TableHead>
+                  <TableHead>{t("bills.frequency")}</TableHead>
+                  <TableHead>{t("bills.nextDue")}</TableHead>
+                  <TableHead>{t("bills.category")}</TableHead>
+                  <TableHead>{t("bills.account")}</TableHead>
                   <TableHead />
                 </TableRow>
               </TableHeader>
@@ -322,47 +324,47 @@ export default function BillsPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editing ? "Edit Bill Reminder" : "New Bill Reminder"}</DialogTitle>
+            <DialogTitle>{editing ? t("bills.editTitle") : t("bills.newTitle")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="bill-name">Name</Label>
+              <Label htmlFor="bill-name">{t("bills.name")}</Label>
               <Input id="bill-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Rent" />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="bill-amount">Amount</Label>
+                <Label htmlFor="bill-amount">{t("bills.amount")}</Label>
                 <Input id="bill-amount" type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="bill-dueday">Due Day</Label>
+                <Label htmlFor="bill-dueday">{t("bills.dueDay")}</Label>
                 <Input id="bill-dueday" type="number" min="1" max="31" value={form.dueDay} onChange={(e) => setForm({ ...form, dueDay: e.target.value })} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Frequency</Label>
+                <Label>{t("bills.frequency")}</Label>
                 <Select value={form.frequency} onValueChange={(v) => setForm({ ...form, frequency: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="quarterly">Quarterly</SelectItem>
-                    <SelectItem value="yearly">Yearly</SelectItem>
+                    <SelectItem value="monthly">{t("bills.monthly")}</SelectItem>
+                    <SelectItem value="quarterly">{t("bills.quarterly")}</SelectItem>
+                    <SelectItem value="yearly">{t("bills.yearly")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="bill-nextdue">Next Due Date</Label>
+                <Label htmlFor="bill-nextdue">{t("bills.nextDueDate")}</Label>
                 <Input id="bill-nextdue" type="date" value={form.nextDueDate} onChange={(e) => setForm({ ...form, nextDueDate: e.target.value })} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Category (optional)</Label>
+                <Label>{t("bills.categoryOptional")}</Label>
                 <Select value={form.categoryId} onValueChange={(v) => setForm({ ...form, categoryId: v === "none" ? "" : v })}>
-                  <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t("bills.none")} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="none">{t("bills.none")}</SelectItem>
                     {categories.filter((c) => c.type === "expense").map((c) => (
                       <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                     ))}
@@ -370,11 +372,11 @@ export default function BillsPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Account (optional)</Label>
+                <Label>{t("bills.accountOptional")}</Label>
                 <Select value={form.accountId} onValueChange={(v) => setForm({ ...form, accountId: v === "none" ? "" : v })}>
-                  <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t("bills.none")} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="none">{t("bills.none")}</SelectItem>
                     {accounts.map((a) => (
                       <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
                     ))}
@@ -384,9 +386,9 @@ export default function BillsPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>{t("common.cancel")}</Button>
             <Button onClick={handleSubmit} disabled={submitting || !form.name || !form.amount || !form.nextDueDate}>
-              {submitting ? "Saving..." : "Save"}
+              {submitting ? t("common.saving") : t("common.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -396,15 +398,15 @@ export default function BillsPage() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Bill Reminder</DialogTitle>
+            <DialogTitle>{t("bills.deleteTitle")}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Are you sure you want to delete &quot;{deleting?.name}&quot;?
+            {t("bills.deleteConfirm").replace("{name}", deleting?.name ?? "")}
           </p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>{t("common.cancel")}</Button>
             <Button variant="destructive" onClick={handleDelete} disabled={submitting}>
-              {submitting ? "Deleting..." : "Delete"}
+              {submitting ? t("common.deleting") : t("common.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -414,16 +416,16 @@ export default function BillsPage() {
       <Dialog open={payDialogOpen} onOpenChange={setPayDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Pay Bill: {paying?.name}</DialogTitle>
+            <DialogTitle>{t("bills.payTitle").replace("{name}", paying?.name ?? "")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Amount: {paying ? formatCents(paying.amount) : ""}
+              {t("bills.payAmount").replace("{amount}", paying ? formatCents(paying.amount) : "")}
             </p>
             <div className="space-y-2">
-              <Label>Pay from Account</Label>
+              <Label>{t("bills.payFromAccount")}</Label>
               <Select value={payAccountId} onValueChange={setPayAccountId}>
-                <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t("bills.selectAccount")} /></SelectTrigger>
                 <SelectContent>
                   {accounts.map((a) => (
                     <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
@@ -432,14 +434,14 @@ export default function BillsPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="pay-date">Date</Label>
+              <Label htmlFor="pay-date">{t("bills.date")}</Label>
               <Input id="pay-date" type="date" value={payDate} onChange={(e) => setPayDate(e.target.value)} />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPayDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setPayDialogOpen(false)}>{t("common.cancel")}</Button>
             <Button onClick={handlePay} disabled={submitting || !payAccountId || !payDate}>
-              {submitting ? "Paying..." : "Pay"}
+              {submitting ? t("bills.paying") : t("bills.pay")}
             </Button>
           </DialogFooter>
         </DialogContent>

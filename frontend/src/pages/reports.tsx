@@ -28,6 +28,7 @@ import {
   Legend,
 } from "recharts"
 import { useAuth } from "@/context/auth-context"
+import { useLanguage } from "@/context/language-context"
 import api from "@/lib/api"
 import { formatCents } from "@/lib/format"
 import type { MonthSummary, CategorySpending, TrendPoint, MemberSpending } from "@/lib/types"
@@ -45,6 +46,7 @@ function monthLabel(m: number, y: number) {
 export default function ReportsPage() {
   const { user } = useAuth()
   const isAdmin = user?.role === "admin"
+  const { t } = useLanguage()
 
   const [month, setMonth] = useState(now.getMonth() + 1)
   const [year, setYear] = useState(now.getFullYear())
@@ -104,7 +106,7 @@ export default function ReportsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Reports</h1>
+        <h1 className="text-2xl font-bold">{t("reports.title")}</h1>
         <div className="flex items-center gap-2">
           <Select value={String(month)} onValueChange={(v) => setMonth(parseInt(v))}>
             <SelectTrigger className="w-[120px]">
@@ -129,10 +131,10 @@ export default function ReportsPage() {
 
       <Tabs defaultValue="monthly">
         <TabsList>
-          <TabsTrigger value="monthly">Monthly</TabsTrigger>
-          <TabsTrigger value="categories">By Category</TabsTrigger>
-          <TabsTrigger value="trends">Trends</TabsTrigger>
-          {isAdmin && <TabsTrigger value="family">Family</TabsTrigger>}
+          <TabsTrigger value="monthly">{t("reports.monthly")}</TabsTrigger>
+          <TabsTrigger value="categories">{t("reports.byCategory")}</TabsTrigger>
+          <TabsTrigger value="trends">{t("reports.trends")}</TabsTrigger>
+          {isAdmin && <TabsTrigger value="family">{t("reports.family")}</TabsTrigger>}
         </TabsList>
 
         {/* Monthly Summary Tab */}
@@ -141,7 +143,7 @@ export default function ReportsPage() {
             <div className="grid gap-4 sm:grid-cols-3">
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Income</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">{t("reports.income")}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-2xl font-bold text-income">{formatCents(monthlySummary.totalIncome)}</p>
@@ -149,7 +151,7 @@ export default function ReportsPage() {
               </Card>
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Expenses</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">{t("reports.expenses")}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-2xl font-bold text-expense">{formatCents(Math.abs(monthlySummary.totalExpense))}</p>
@@ -157,7 +159,7 @@ export default function ReportsPage() {
               </Card>
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Net</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">{t("reports.net")}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className={`text-2xl font-bold ${monthlySummary.net >= 0 ? "text-income" : "text-expense"}`}>
@@ -167,7 +169,7 @@ export default function ReportsPage() {
               </Card>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">No data for this period.</p>
+            <p className="text-sm text-muted-foreground">{t("reports.noDataPeriod")}</p>
           )}
         </TabsContent>
 
@@ -176,7 +178,7 @@ export default function ReportsPage() {
           {chartData.length > 0 ? (
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium">Spending by Category</CardTitle>
+                <CardTitle className="text-sm font-medium">{t("reports.spendingByCategory")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-[300px]">
@@ -185,7 +187,7 @@ export default function ReportsPage() {
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis type="number" tickFormatter={(v) => `€${v}`} />
                       <YAxis type="category" dataKey="name" width={80} />
-                      <Tooltip formatter={(value: number) => [`€${value.toFixed(2)}`, "Spent"]} />
+                      <Tooltip formatter={(value: number) => [`€${value.toFixed(2)}`, t("reports.spent")]} />
                       <Bar dataKey="amount" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -193,7 +195,7 @@ export default function ReportsPage() {
               </CardContent>
             </Card>
           ) : (
-            <p className="text-sm text-muted-foreground">No spending data for this period.</p>
+            <p className="text-sm text-muted-foreground">{t("reports.noSpendingData")}</p>
           )}
 
           {categorySpending.length > 0 && (
@@ -216,7 +218,7 @@ export default function ReportsPage() {
           {trendData.length > 0 ? (
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium">Income vs Expenses (Last 6 Months)</CardTitle>
+                <CardTitle className="text-sm font-medium">{t("reports.trendTitle")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-[300px]">
@@ -227,16 +229,16 @@ export default function ReportsPage() {
                       <YAxis tickFormatter={(v) => `€${v}`} />
                       <Tooltip formatter={(value: number) => `€${value.toFixed(2)}`} />
                       <Legend />
-                      <Line type="monotone" dataKey="income" stroke="hsl(var(--income))" strokeWidth={2} name="Income" />
-                      <Line type="monotone" dataKey="expenses" stroke="hsl(var(--expense))" strokeWidth={2} name="Expenses" />
-                      <Line type="monotone" dataKey="net" stroke="hsl(var(--primary))" strokeWidth={2} strokeDasharray="5 5" name="Net" />
+                      <Line type="monotone" dataKey="income" stroke="hsl(var(--income))" strokeWidth={2} name={t("reports.income")} />
+                      <Line type="monotone" dataKey="expenses" stroke="hsl(var(--expense))" strokeWidth={2} name={t("reports.expenses")} />
+                      <Line type="monotone" dataKey="net" stroke="hsl(var(--primary))" strokeWidth={2} strokeDasharray="5 5" name={t("reports.net")} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
           ) : (
-            <p className="text-sm text-muted-foreground">Not enough data for trends.</p>
+            <p className="text-sm text-muted-foreground">{t("reports.noTrendData")}</p>
           )}
         </TabsContent>
 
@@ -246,7 +248,7 @@ export default function ReportsPage() {
             {memberData.length > 0 ? (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sm font-medium">Family Spending Comparison</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t("reports.familyComparison")}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="h-[300px]">
@@ -257,15 +259,15 @@ export default function ReportsPage() {
                         <YAxis tickFormatter={(v) => `€${v}`} />
                         <Tooltip formatter={(value: number) => `€${value.toFixed(2)}`} />
                         <Legend />
-                        <Bar dataKey="income" fill="hsl(var(--income))" name="Income" />
-                        <Bar dataKey="expenses" fill="hsl(var(--expense))" name="Expenses" />
+                        <Bar dataKey="income" fill="hsl(var(--income))" name={t("reports.income")} />
+                        <Bar dataKey="expenses" fill="hsl(var(--expense))" name={t("reports.expenses")} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
                 </CardContent>
               </Card>
             ) : (
-              <p className="text-sm text-muted-foreground">No family data for this period.</p>
+              <p className="text-sm text-muted-foreground">{t("reports.noFamilyData")}</p>
             )}
           </TabsContent>
         )}

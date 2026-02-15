@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { AuthProvider } from "@/context/auth-context"
+import { LanguageProvider } from "@/context/language-context"
 import { ProtectedRoute } from "@/components/protected-route"
 import { AppLayout } from "@/components/layout/app-layout"
 import { Toaster } from "@/components/ui/sonner"
@@ -20,6 +21,7 @@ import ImportExportPage from "@/pages/import-export"
 
 export default function App() {
   return (
+    <LanguageProvider>
     <BrowserRouter>
       <AuthProvider>
         <Routes>
@@ -57,5 +59,6 @@ export default function App() {
         <Toaster />
       </AuthProvider>
     </BrowserRouter>
+    </LanguageProvider>
   )
 }

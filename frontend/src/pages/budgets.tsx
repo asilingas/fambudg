@@ -27,6 +27,7 @@ import {
 import { Plus, Pencil, Trash2, AlertTriangle } from "lucide-react"
 import { toast } from "sonner"
 import { useAuth } from "@/context/auth-context"
+import { useLanguage } from "@/context/language-context"
 import api from "@/lib/api"
 import { formatCents } from "@/lib/format"
 import type { Budget, BudgetSummary, Category } from "@/lib/types"
@@ -50,6 +51,7 @@ const emptyForm: FormData = {
 export default function BudgetsPage() {
   const { user } = useAuth()
   const isAdmin = user?.role === "admin"
+  const { t } = useLanguage()
 
   const [budgets, setBudgets] = useState<Budget[]>([])
   const [summary, setSummary] = useState<BudgetSummary[]>([])
@@ -120,15 +122,15 @@ export default function BudgetsPage() {
       }
       if (editing) {
         await api.put(`/budgets/${editing.id}`, payload)
-        toast.success("Budget updated")
+        toast.success(t("budgets.updated"))
       } else {
         await api.post("/budgets", payload)
-        toast.success("Budget created")
+        toast.success(t("budgets.created"))
       }
       setDialogOpen(false)
       fetchData()
     } catch {
-      toast.error("Failed to save budget")
+      toast.error(t("budgets.saveFailed"))
     } finally {
       setSubmitting(false)
     }
@@ -139,12 +141,12 @@ export default function BudgetsPage() {
     setSubmitting(true)
     try {
       await api.delete(`/budgets/${deleting.id}`)
-      toast.success("Budget deleted")
+      toast.success(t("budgets.deleted"))
       setDeleteDialogOpen(false)
       setDeleting(null)
       fetchData()
     } catch {
-      toast.error("Failed to delete budget")
+      toast.error(t("budgets.deleteFailed"))
     } finally {
       setSubmitting(false)
     }
@@ -157,7 +159,7 @@ export default function BudgetsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Budgets</h1>
+        <h1 className="text-2xl font-bold">{t("budgets.title")}</h1>
         <div className="flex items-center gap-2">
           <Select value={String(month)} onValueChange={(v) => setMonth(parseInt(v))}>
             <SelectTrigger className="w-[120px]">
@@ -180,14 +182,14 @@ export default function BudgetsPage() {
           {isAdmin && (
             <Button onClick={openCreate} size="sm">
               <Plus className="mr-1 h-4 w-4" />
-              Add Budget
+              {t("budgets.add")}
             </Button>
           )}
         </div>
       </div>
 
       {summary.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No budgets set for this month.</p>
+        <p className="text-sm text-muted-foreground">{t("budgets.noData")}</p>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {summary.map((s) => {
@@ -217,19 +219,19 @@ export default function BudgetsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between text-sm mb-2">
-                    <span>{formatCents(spent)} spent</span>
-                    <span>of {formatCents(s.budgetAmount)}</span>
+                    <span>{formatCents(spent)} {t("budgets.spent")}</span>
+                    <span>{t("budgets.of")} {formatCents(s.budgetAmount)}</span>
                   </div>
                   <Progress value={pct} className={overspent ? "[&>div]:bg-destructive" : ""} />
                   {overspent && (
                     <div className="flex items-center gap-1 mt-2 text-xs text-destructive">
                       <AlertTriangle className="h-3 w-3" />
-                      Overspent by {formatCents(spent - s.budgetAmount)}
+                      {t("budgets.overspentBy")} {formatCents(spent - s.budgetAmount)}
                     </div>
                   )}
                   {!overspent && (
                     <p className="text-xs text-muted-foreground mt-2">
-                      {formatCents(s.remaining)} remaining
+                      {formatCents(s.remaining)} {t("budgets.remaining")}
                     </p>
                   )}
                 </CardContent>
@@ -243,14 +245,14 @@ export default function BudgetsPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editing ? "Edit Budget" : "New Budget"}</DialogTitle>
+            <DialogTitle>{editing ? t("budgets.editTitle") : t("budgets.newTitle")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Category</Label>
+              <Label>{t("budgets.category")}</Label>
               <Select value={form.categoryId} onValueChange={(v) => setForm({ ...form, categoryId: v })}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder={t("budgets.selectCategory")} />
                 </SelectTrigger>
                 <SelectContent>
                   {categories
@@ -264,7 +266,7 @@ export default function BudgetsPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="budget-amount">Amount</Label>
+              <Label htmlFor="budget-amount">{t("budgets.amount")}</Label>
               <Input
                 id="budget-amount"
                 type="number"
@@ -276,7 +278,7 @@ export default function BudgetsPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Month</Label>
+                <Label>{t("budgets.month")}</Label>
                 <Select value={form.month} onValueChange={(v) => setForm({ ...form, month: v })}>
                   <SelectTrigger>
                     <SelectValue />
@@ -291,7 +293,7 @@ export default function BudgetsPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="budget-year">Year</Label>
+                <Label htmlFor="budget-year">{t("budgets.year")}</Label>
                 <Input
                   id="budget-year"
                   type="number"
@@ -302,9 +304,9 @@ export default function BudgetsPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>{t("common.cancel")}</Button>
             <Button onClick={handleSubmit} disabled={submitting || !form.categoryId || !form.amount}>
-              {submitting ? "Saving..." : "Save"}
+              {submitting ? t("common.saving") : t("common.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -314,15 +316,15 @@ export default function BudgetsPage() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Budget</DialogTitle>
+            <DialogTitle>{t("budgets.deleteTitle")}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Are you sure you want to delete the budget for &quot;{deleting ? categoryName(deleting.categoryId) : ""}&quot;?
+            {t("budgets.deleteConfirm").replace("{name}", deleting ? categoryName(deleting.categoryId) : "")}
           </p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>{t("common.cancel")}</Button>
             <Button variant="destructive" onClick={handleDelete} disabled={submitting}>
-              {submitting ? "Deleting..." : "Delete"}
+              {submitting ? t("common.deleting") : t("common.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>
