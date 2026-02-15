@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/yourusername/fambudg/backend/internal/config"
+	"github.com/asilingas/fambudg/backend/internal/config"
 )
 
 // NewPool creates a new connection pool to the database

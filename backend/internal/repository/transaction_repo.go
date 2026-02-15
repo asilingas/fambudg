@@ -8,7 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/yourusername/fambudg/backend/internal/model"
+	"github.com/asilingas/fambudg/backend/internal/model"
 )
 
 type TransactionRepository struct {

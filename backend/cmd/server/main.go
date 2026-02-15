@@ -6,12 +6,12 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/yourusername/fambudg/backend/internal/config"
-	"github.com/yourusername/fambudg/backend/internal/database"
-	"github.com/yourusername/fambudg/backend/internal/handler"
-	"github.com/yourusername/fambudg/backend/internal/middleware"
-	"github.com/yourusername/fambudg/backend/internal/repository"
-	"github.com/yourusername/fambudg/backend/internal/service"
+	"github.com/asilingas/fambudg/backend/internal/config"
+	"github.com/asilingas/fambudg/backend/internal/database"
+	"github.com/asilingas/fambudg/backend/internal/handler"
+	"github.com/asilingas/fambudg/backend/internal/middleware"
+	"github.com/asilingas/fambudg/backend/internal/repository"
+	"github.com/asilingas/fambudg/backend/internal/service"
 )
 
 func main() {

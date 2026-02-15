@@ -10,9 +10,9 @@ import (
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/yourusername/fambudg/backend/internal/config"
-	"github.com/yourusername/fambudg/backend/internal/repository"
-	"github.com/yourusername/fambudg/backend/internal/service"
+	"github.com/asilingas/fambudg/backend/internal/config"
+	"github.com/asilingas/fambudg/backend/internal/repository"
+	"github.com/asilingas/fambudg/backend/internal/service"
 )
 
 var opts = godog.Options{

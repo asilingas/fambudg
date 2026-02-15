@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/yourusername/fambudg/backend/internal/model"
-	"github.com/yourusername/fambudg/backend/internal/repository"
+	"github.com/asilingas/fambudg/backend/internal/model"
+	"github.com/asilingas/fambudg/backend/internal/repository"
 )
 
 type AuthService struct {

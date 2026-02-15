@@ -6,8 +6,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
-	"github.com/yourusername/fambudg/backend/internal/model"
-	"github.com/yourusername/fambudg/backend/internal/service"
+	"github.com/asilingas/fambudg/backend/internal/model"
+	"github.com/asilingas/fambudg/backend/internal/service"
 )
 
 type CategoryHandler struct {

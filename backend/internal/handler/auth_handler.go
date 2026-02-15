@@ -5,9 +5,9 @@ import (
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/yourusername/fambudg/backend/internal/middleware"
-	"github.com/yourusername/fambudg/backend/internal/model"
-	"github.com/yourusername/fambudg/backend/internal/service"
+	"github.com/asilingas/fambudg/backend/internal/middleware"
+	"github.com/asilingas/fambudg/backend/internal/model"
+	"github.com/asilingas/fambudg/backend/internal/service"
 )
 
 type AuthHandler struct {

@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 
-	"github.com/yourusername/fambudg/backend/internal/model"
-	"github.com/yourusername/fambudg/backend/internal/repository"
+	"github.com/asilingas/fambudg/backend/internal/model"
+	"github.com/asilingas/fambudg/backend/internal/repository"
 )
 
 type TransactionService struct {

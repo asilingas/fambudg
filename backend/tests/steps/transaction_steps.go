@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/cucumber/godog"
-	"github.com/yourusername/fambudg/backend/internal/model"
+	"github.com/asilingas/fambudg/backend/internal/model"
 )
 
 func registerTransactionSteps(ctx *godog.ScenarioContext, tc *TestContext) {

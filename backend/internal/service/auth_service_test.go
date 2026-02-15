@@ -3,7 +3,7 @@ package service
 import (
 	"testing"
 
-	"github.com/yourusername/fambudg/backend/internal/model"
+	"github.com/asilingas/fambudg/backend/internal/model"
 )
 
 func TestGenerateToken(t *testing.T) {
