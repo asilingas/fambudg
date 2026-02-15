@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/asilingas/fambudg/backend/internal/model"
 	"github.com/cucumber/godog"
-	"github.com/yourusername/fambudg/backend/internal/model"
 )
 
 func registerAuthSteps(ctx *godog.ScenarioContext, tc *TestContext) {
