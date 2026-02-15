@@ -35,6 +35,8 @@ func main() {
 	transactionRepo := repository.NewTransactionRepository(pool)
 	budgetRepo := repository.NewBudgetRepository(pool)
 	reportRepo := repository.NewReportRepository(pool)
+	savingGoalRepo := repository.NewSavingGoalRepository(pool)
+	billReminderRepo := repository.NewBillReminderRepository(pool)
 
 	// Initialize services
 	authService := service.NewAuthService(userRepo, cfg.JWT.Secret)
@@ -43,6 +45,8 @@ func main() {
 	transactionService := service.NewTransactionService(transactionRepo, accountRepo)
 	budgetService := service.NewBudgetService(budgetRepo)
 	reportService := service.NewReportService(reportRepo, accountRepo)
+	savingGoalService := service.NewSavingGoalService(savingGoalRepo)
+	billReminderService := service.NewBillReminderService(billReminderRepo, transactionRepo, accountRepo)
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(authService)
@@ -51,6 +55,10 @@ func main() {
 	transactionHandler := handler.NewTransactionHandler(transactionService)
 	budgetHandler := handler.NewBudgetHandler(budgetService)
 	reportHandler := handler.NewReportHandler(reportService)
+	savingGoalHandler := handler.NewSavingGoalHandler(savingGoalService)
+	billReminderHandler := handler.NewBillReminderHandler(billReminderService)
+	transferHandler := handler.NewTransferHandler(transactionService)
+	importExportHandler := handler.NewImportExportHandler(transactionService)
 
 	// Create router
 	r := chi.NewRouter()
@@ -102,9 +110,30 @@ func main() {
 		r.Get("/api/reports/monthly", reportHandler.Monthly)
 		r.Get("/api/reports/by-category", reportHandler.ByCategory)
 		r.Get("/api/reports/by-member", reportHandler.ByMember)
+		r.Get("/api/reports/trends", reportHandler.Trends)
 
 		// Search
 		r.Get("/api/search", reportHandler.Search)
+
+		// Saving Goals
+		r.Get("/api/saving-goals", savingGoalHandler.List)
+		r.Post("/api/saving-goals", savingGoalHandler.Create)
+		r.Put("/api/saving-goals/{id}", savingGoalHandler.Update)
+		r.Post("/api/saving-goals/{id}/contribute", savingGoalHandler.Contribute)
+
+		// Bill Reminders
+		r.Get("/api/bill-reminders", billReminderHandler.List)
+		r.Post("/api/bill-reminders", billReminderHandler.Create)
+		r.Put("/api/bill-reminders/{id}", billReminderHandler.Update)
+		r.Delete("/api/bill-reminders/{id}", billReminderHandler.Delete)
+		r.Post("/api/bill-reminders/{id}/pay", billReminderHandler.Pay)
+
+		// Transfers
+		r.Post("/api/transfers", transferHandler.Create)
+
+		// Import / Export
+		r.Post("/api/import/csv", importExportHandler.ImportCSV)
+		r.Get("/api/export/csv", importExportHandler.ExportCSV)
 	})
 
 	// Health check

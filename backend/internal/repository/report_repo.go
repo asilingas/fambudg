@@ -237,3 +237,36 @@ func (r *ReportRepository) SearchTransactions(ctx context.Context, filters *mode
 		TotalCount:   len(transactions),
 	}, nil
 }
+
+func (r *ReportRepository) GetTrends(ctx context.Context, userID string, months int) ([]*model.TrendPoint, error) {
+	query := `
+		SELECT
+			EXTRACT(MONTH FROM date)::int AS month,
+			EXTRACT(YEAR FROM date)::int AS year,
+			COALESCE(SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END), 0) AS total_income,
+			COALESCE(SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END), 0) AS total_expense
+		FROM transactions
+		WHERE user_id = $1
+			AND date >= (CURRENT_DATE - make_interval(months => $2))
+		GROUP BY EXTRACT(YEAR FROM date), EXTRACT(MONTH FROM date)
+		ORDER BY year, month
+	`
+
+	rows, err := r.db.Query(ctx, query, userID, months)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get trends: %w", err)
+	}
+	defer rows.Close()
+
+	var trends []*model.TrendPoint
+	for rows.Next() {
+		tp := &model.TrendPoint{}
+		if err := rows.Scan(&tp.Month, &tp.Year, &tp.TotalIncome, &tp.TotalExpense); err != nil {
+			return nil, fmt.Errorf("failed to scan trend point: %w", err)
+		}
+		tp.Net = tp.TotalIncome - tp.TotalExpense
+		trends = append(trends, tp)
+	}
+
+	return trends, nil
+}

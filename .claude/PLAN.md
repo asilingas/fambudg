@@ -353,17 +353,17 @@ fambudg/
 - [x] Search endpoint (by description, amount, date, category, account, tags)
 
 ### Phase 3 — Savings, Recurring & Bills
-- [ ] Saving goals CRUD
-- [ ] Contribute to saving goal endpoint
+- [x] Saving goals CRUD
+- [x] Contribute to saving goal endpoint
 - [ ] Recurring transaction rules
 - [ ] Recurring transaction auto-generation (cron or on-demand)
-- [ ] Month-over-month trend report
-- [ ] Bill reminders CRUD
-- [ ] Mark bill as paid (auto-creates transaction)
-- [ ] Upcoming bills endpoint
-- [ ] Transfers between accounts
-- [ ] CSV import (transactions)
-- [ ] CSV export (transactions)
+- [x] Month-over-month trend report
+- [x] Bill reminders CRUD
+- [x] Mark bill as paid (auto-creates transaction)
+- [x] Upcoming bills endpoint
+- [x] Transfers between accounts
+- [x] CSV import (transactions)
+- [x] CSV export (transactions)
 
 ### Phase 4 — Multi-User & Permissions
 - [ ] User roles (admin, member, child)

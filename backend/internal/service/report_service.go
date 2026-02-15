@@ -57,3 +57,7 @@ func (s *ReportService) GetSpendingByMember(ctx context.Context, month, year int
 func (s *ReportService) SearchTransactions(ctx context.Context, filters *model.SearchFilters) (*model.SearchResult, error) {
 	return s.reportRepo.SearchTransactions(ctx, filters)
 }
+
+func (s *ReportService) GetTrends(ctx context.Context, userID string, months int) ([]*model.TrendPoint, error) {
+	return s.reportRepo.GetTrends(ctx, userID, months)
+}

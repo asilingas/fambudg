@@ -166,6 +166,32 @@ func (h *ReportHandler) Search(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, results)
 }
 
+func (h *ReportHandler) Trends(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	if userID == "" {
+		respondWithError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	months := 6
+	if m := r.URL.Query().Get("months"); m != "" {
+		parsed, err := strconv.Atoi(m)
+		if err != nil || parsed < 1 || parsed > 24 {
+			respondWithError(w, http.StatusBadRequest, "invalid months parameter")
+			return
+		}
+		months = parsed
+	}
+
+	trends, err := h.reportService.GetTrends(r.Context(), userID, months)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, trends)
+}
+
 func parseMonthYear(r *http.Request) (int, int, error) {
 	monthStr := r.URL.Query().Get("month")
 	yearStr := r.URL.Query().Get("year")
