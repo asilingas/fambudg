@@ -5,6 +5,7 @@
 
 # Environment
 .env
+.env.prod
 
 # Database file (if ever using SQLite)
 *.db

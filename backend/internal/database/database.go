@@ -13,10 +13,7 @@ import (
 // NewPool creates a new connection pool to the database
 func NewPool(cfg *config.DatabaseConfig) (*pgxpool.Pool, error) {
 	// Build connection string
-	connString := fmt.Sprintf(
-		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable pool_max_conns=10",
-		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.DBName,
-	)
+	connString := cfg.ConnectionString() + " pool_max_conns=10"
 
 	// Parse config
 	poolConfig, err := pgxpool.ParseConfig(connString)

@@ -1,0 +1,6 @@
+.git
+backend/bin/
+backend/tests/
+backend/.env
+frontend/node_modules/
+.claude/

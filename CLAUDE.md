@@ -4,13 +4,15 @@ Family budget tracking web app. Monorepo: Go backend + React frontend.
 
 ## Current Status
 
-Phases 1–6 complete. Full-stack app with Go backend and React frontend. Backend: auth, transactions, budgets, reports, saving goals, bill reminders, CSV import/export, recurring transactions, RBAC, allowances, family spending comparison. Frontend: all pages with role-aware navigation, Recharts visualizations, dark mode, loading skeletons, EUR currency formatting, i18n (English/Lithuanian). 96 frontend tests + 49 backend BDD tests.
+Phases 1–7 complete. Full-stack app with Go backend and React frontend. Backend: auth, transactions, budgets, reports, saving goals, bill reminders, CSV import/export, recurring transactions, RBAC, allowances, family spending comparison. Frontend: all pages with role-aware navigation, Recharts visualizations, dark mode, loading skeletons, EUR currency formatting, i18n (English/Lithuanian). 96 frontend tests + 49 backend BDD tests. Cloud deployment: Dockerized production stack (Caddy + Go + PostgreSQL) with CI/CD via GitHub Actions on `prod` branch.
 
 ## Tech Stack
 
 - **Backend:** Go (in `backend/`)
-- **Frontend:** React (in `frontend/` — later)
-- **Database:** PostgreSQL (via Docker locally, managed cloud in production)
+- **Frontend:** React (in `frontend/`)
+- **Database:** PostgreSQL (via Docker locally and in production)
+- **Reverse Proxy:** Caddy 2 (auto HTTPS via Let's Encrypt)
+- **CI/CD:** GitHub Actions (test + deploy on push to `prod`)
 - **Router:** chi/v5
 - **DB driver:** pgx/v5
 - **Migrations:** goose/v3
@@ -37,12 +39,19 @@ fambudg/
 │   ├── migrations/              # goose SQL migration files (001–008)
 │   ├── tests/features/          # godog BDD .feature files (13 files)
 │   ├── tests/steps/             # godog step definitions (15 files)
+│   ├── Dockerfile               # multi-stage Go build
 │   ├── go.mod
 │   └── .env
-├── frontend/                    # React app (later)
+├── frontend/                    # React app
+├── .github/workflows/deploy.yml # CI/CD: test + deploy on push to prod
 ├── .claude/plan.md              # full project plan with phases
+├── scripts/backup.sh            # daily PostgreSQL backup script
+├── Caddyfile                    # Caddy reverse proxy config
+├── Dockerfile.caddy             # frontend build + Caddy
 ├── docker-compose.yml           # Postgres for local dev
+├── docker-compose.prod.yml      # production stack (Caddy + backend + db)
 ├── .env.example
+├── .env.prod.example
 └── .gitignore
 ```
 
@@ -176,6 +185,26 @@ When adding new strings: add key to both `en.ts` and `lt.ts`, then use `t("key")
 
 See `.env.example` in project root for required variables. Actual `.env` lives in `backend/` and is never committed.
 
+For production, see `.env.prod.example`. The actual `.env.prod` lives on the VPS at `/opt/fambudg/.env.prod` and is never committed.
+
+## Production Deployment
+
+### Architecture
+
+```
+Internet → Hetzner CX22 VPS
+  ├── Caddy (:80/:443) — auto HTTPS, serves frontend, proxies /api/* to backend
+  ├── Go backend (:8080, internal only)
+  └── PostgreSQL 17 (:5432, internal only)
+```
+
+### CI/CD
+
+Push to `prod` branch triggers GitHub Actions:
+1. **Test job:** runs backend BDD tests + frontend vitest against Postgres service container
+2. **Deploy job:** SSH into VPS, pull latest, `docker compose build + up -d`, run migrations, health check
+
+
 ## Full Plan
 
-See `.claude/plan.md` for the complete project plan including data models, all API endpoints, and phased build checklist. Phases 1–5 complete, Phase 6 (Cloud Deployment) is next.
+See `.claude/plan.md` for the complete project plan including data models, all API endpoints, and phased build checklist. Phases 1–7 complete.

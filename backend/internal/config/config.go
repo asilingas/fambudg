@@ -20,6 +20,7 @@ type DatabaseConfig struct {
 	User     string
 	Password string
 	DBName   string
+	SSLMode  string
 }
 
 type ServerConfig struct {
@@ -41,6 +42,7 @@ func Load() (*Config, error) {
 	cfg.Database.User = getEnv("DB_USER", "budget")
 	cfg.Database.Password = getEnv("DB_PASSWORD", "")
 	cfg.Database.DBName = getEnv("DB_NAME", "fambudg")
+	cfg.Database.SSLMode = getEnv("DB_SSLMODE", "disable")
 
 	port, err := strconv.Atoi(getEnv("DB_PORT", "5432"))
 	if err != nil {
@@ -73,7 +75,7 @@ func getEnv(key, defaultValue string) string {
 
 func (c *DatabaseConfig) ConnectionString() string {
 	return fmt.Sprintf(
-		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		c.Host, c.Port, c.User, c.Password, c.DBName,
+		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+		c.Host, c.Port, c.User, c.Password, c.DBName, c.SSLMode,
 	)
 }
