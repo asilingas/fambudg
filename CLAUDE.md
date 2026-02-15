@@ -130,6 +130,11 @@ docker compose up -d
 cd backend
 go run cmd/migrate/main.go up
 
+# Seed database with fixture data (from backend/)
+go run cmd/seed/main.go
+# Or target test database:
+DB_NAME=fambudg_test go run cmd/seed/main.go
+
 # Start server (from backend/)
 go run cmd/server/main.go
 # Runs on http://localhost:8080
