@@ -187,7 +187,7 @@ export default function ReportsPage() {
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis type="number" tickFormatter={(v) => `€${v}`} />
                       <YAxis type="category" dataKey="name" width={80} />
-                      <Tooltip formatter={(value: number) => [`€${value.toFixed(2)}`, t("reports.spent")]} />
+                      <Tooltip formatter={(value: number | undefined) => [`€${(value ?? 0).toFixed(2)}`, t("reports.spent")]} />
                       <Bar dataKey="amount" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -227,7 +227,7 @@ export default function ReportsPage() {
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" />
                       <YAxis tickFormatter={(v) => `€${v}`} />
-                      <Tooltip formatter={(value: number) => `€${value.toFixed(2)}`} />
+                      <Tooltip formatter={(value: number | undefined) => `€${(value ?? 0).toFixed(2)}`} />
                       <Legend />
                       <Line type="monotone" dataKey="income" stroke="hsl(var(--income))" strokeWidth={2} name={t("reports.income")} />
                       <Line type="monotone" dataKey="expenses" stroke="hsl(var(--expense))" strokeWidth={2} name={t("reports.expenses")} />
@@ -257,7 +257,7 @@ export default function ReportsPage() {
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" />
                         <YAxis tickFormatter={(v) => `€${v}`} />
-                        <Tooltip formatter={(value: number) => `€${value.toFixed(2)}`} />
+                        <Tooltip formatter={(value: number | undefined) => `€${(value ?? 0).toFixed(2)}`} />
                         <Legend />
                         <Bar dataKey="income" fill="hsl(var(--income))" name={t("reports.income")} />
                         <Bar dataKey="expenses" fill="hsl(var(--expense))" name={t("reports.expenses")} />
