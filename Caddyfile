@@ -1,4 +1,10 @@
 {$DOMAIN} {
+	# Access logs
+	log {
+		output stdout
+		format json
+	}
+
 	# Security headers
 	header {
 		X-Content-Type-Options nosniff
