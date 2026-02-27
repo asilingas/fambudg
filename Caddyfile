@@ -1,3 +1,8 @@
+# Reject direct IP access and unknown domains
+:80, :443 {
+	abort
+}
+
 {$DOMAIN} {
 	# Access logs
 	log {
